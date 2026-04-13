@@ -1,17 +1,26 @@
-"""Application configuration from environment."""
-
-import os
-from pathlib import Path
-
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = PROJECT_ROOT / "data"
-AUDIO_DIR = DATA_DIR / "audio"
-TRANSCRIPTS_DIR = DATA_DIR / "transcripts"
+class Config:
+    # LLM
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 
+    # Hugging Face
+    HF_TOKEN = os.getenv("HF_TOKEN")
 
-def get_env(key: str, default: str | None = None) -> str | None:
-    return os.getenv(key, default)
+    # Whisper
+    WHISPER_MODEL = os.getenv("WHISPER_MODEL", "large-v2")
+    DEVICE = os.getenv("DEVICE", "cuda")  # your RTX 2050 will be used
+
+    # Storage
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    CHROMA_PATH = os.getenv("CHROMA_PATH", "./data/chroma_db")
+
+    # Audio
+    AUDIO_DIR = "./data/audio"
+    TRANSCRIPT_DIR = "./data/transcripts"
+
+config = Config()
