@@ -1,0 +1,35 @@
+# Core
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+python-multipart==0.0.9
+python-dotenv==1.0.1
+setuptools==80.9.0
+wheel==0.46.3
+
+# Transcription + Diarization
+openai-whisper==20240930
+whisperx==3.1.1
+# Required for +cu121 wheels below.
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.3.1+cu121
+torchaudio==2.3.1+cu121
+torchvision==0.18.1+cu121
+
+# NLP + LLM
+ollama==0.2.1
+langchain==0.2.11
+langchain-community==0.2.10
+
+# Vector DB
+chromadb==0.5.3
+sentence-transformers==3.0.1
+
+# Structured DB
+sqlalchemy==2.0.31
+psycopg2-binary==2.9.9
+
+# Utilities
+pydantic==2.8.2
+numpy==1.26.4
+pandas==2.2.2
+tqdm==4.66.4
