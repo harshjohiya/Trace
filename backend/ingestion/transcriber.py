@@ -9,6 +9,7 @@ from datetime import datetime
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
 from backend.config import config
+from backend.ingestion.speaker_identifier import SpeakerIdentifier
 
 
 class Transcriber:
@@ -66,7 +67,7 @@ class Transcriber:
                 with urllib.request.urlopen(req, timeout=60) as resp, \
                      open(vad_path, "wb") as out:
                     out.write(resp.read())
-                print(f"[Transcriber] VAD weights saved → {vad_path}")
+                print(f"[Transcriber] VAD weights saved -> {vad_path}")
             except Exception as e:
                 print(f"[Transcriber] WARNING: VAD download failed: {e}")
 
@@ -145,7 +146,7 @@ class Transcriber:
             else:
                 raise
 
-        print("[Transcriber] Whisper model loaded ✓")
+        print("[Transcriber] Whisper model loaded [ok]")
 
     def _load_diarization(self):
         """
@@ -167,9 +168,18 @@ class Transcriber:
                 "pyannote/speaker-diarization-3.1",
                 use_auth_token=config.HF_TOKEN
             )
+            # pyannote internals vary by version; apply optional clustering
+            # tuning only when compatible attributes are exposed.
+            clustering = getattr(pipeline, "_clustering", None)
+            if clustering is not None:
+                if hasattr(clustering, "threshold"):
+                    clustering.threshold = 0.60
+                if hasattr(clustering, "method"):
+                    clustering.method = "average"
+
             pipeline = pipeline.to(torch.device(self.device))
             self.diarize_model = pipeline
-            print("[Transcriber] Diarization pipeline loaded ✓")
+            print("[Transcriber] Diarization pipeline loaded [ok]")
 
         except Exception as e:
             err = str(e)
@@ -240,7 +250,7 @@ class Transcriber:
         )
 
         estimate = max(2, active_bands + 1)
-        print(f"[Transcriber] Energy bands → low:{low} mid:{mid} high:{high} "
+        print(f"[Transcriber] Energy bands -> low:{low} mid:{mid} high:{high} "
               f"| estimated speakers: {estimate}")
 
         return estimate
@@ -252,12 +262,11 @@ class Transcriber:
     def transcribe(self, audio_path: str, meeting_id: str = None) -> dict:
         """
         Full pipeline:
-          1. Transcribe with WhisperX (GPU)
-          2. Align word-level timestamps
-          3. Estimate speaker count from energy
-          4. Run pyannote diarization with tight min/max bounds
-          5. Assign speakers to segments
-          6. Build + save structured JSON
+          1. Transcribe with WhisperX
+          2. Align word timestamps
+          3. Estimate + run speaker diarization
+          4. Auto-identify speaker names
+          5. Build + save structured JSON
         """
         import whisperx
 
@@ -268,9 +277,9 @@ class Transcriber:
 
         print(f"\n[Transcriber] Starting pipeline for: {audio_path}")
 
-        # ── Step 1: Transcribe ──────────────────────────────
+        # ── Step 1: Transcribe ───────────────────────────────
         print("[Transcriber] Step 1/3: Transcribing speech...")
-        audio = whisperx.load_audio(audio_path)
+        audio  = whisperx.load_audio(audio_path)
         result = self.model.transcribe(
             audio,
             batch_size=self.batch_size,
@@ -278,52 +287,53 @@ class Transcriber:
         )
         print(f"[Transcriber] Got {len(result['segments'])} raw segments")
 
-        # ── Step 2: Align word timestamps ───────────────────
+        # ── Step 2: Align timestamps ─────────────────────────
         print("[Transcriber] Step 2/3: Aligning timestamps...")
         align_model, metadata = whisperx.load_align_model(
             language_code=result["language"],
             device=self.device
         )
         result = whisperx.align(
-            result["segments"],
-            align_model,
-            metadata,
-            audio,
-            self.device,
+            result["segments"], align_model,
+            metadata, audio, self.device,
             return_char_alignments=False
         )
-        # Free alignment model to recover VRAM before diarization
         del align_model
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        # ── Step 3: Diarize with smart speaker count ────────
+        # ── Step 3: Diarize ──────────────────────────────────
         print("[Transcriber] Step 3/3: Identifying speakers...")
-
         estimated = self._estimate_speaker_count(audio)
-        print(f"[Transcriber] Speaker estimate: {estimated} "
-              f"(pyannote range: {max(2, estimated - 1)}–{estimated + 2})")
+        print(f"[Transcriber] Estimated speakers: {estimated}")
 
         diarization = self.diarize_model(
             audio_path,
             min_speakers=max(2, estimated - 1),
             max_speakers=estimated + 2
         )
-
         actual = len(set(
             spk for _, _, spk in diarization.itertracks(yield_label=True)
         ))
         print(f"[Transcriber] Pyannote found: {actual} speakers")
 
-        # ── Step 4: Merge diarization → transcript ──────────
         diarize_df = self._pyannote_to_df(diarization)
-        result = self._assign_speakers(result, diarize_df)
+        result     = self._assign_speakers(result, diarize_df)
 
-        # ── Step 5: Build + save ─────────────────────────────
+        # ── Step 4: Build transcript ─────────────────────────
         transcript = self._build_transcript(result, meeting_id)
+
+        # ── Step 5: Auto-identify names ──────────────────────
+        identifier = SpeakerIdentifier()
+        name_map   = identifier.identify(transcript)
+
+        print(f"[Transcriber] Auto-identified names: {name_map}")
+        transcript = self.rename_speakers(transcript, name_map)
+
+        # ── Step 6: Save ─────────────────────────────────────
         output_path = self._save_transcript(transcript, meeting_id)
-        print(f"[Transcriber] Saved → {output_path}")
+        print(f"[Transcriber] Saved -> {output_path}")
 
         return transcript
 

@@ -26,7 +26,7 @@ class AudioProcessor:
         output_filename = f"{uuid.uuid4().hex}_{input_path.stem}.wav"
         output_path = self.audio_dir / output_filename
 
-        print(f"[AudioProcessor] Converting: {input_path.name} → {output_filename}")
+        print(f"[AudioProcessor] Converting: {input_path.name} -> {output_filename}")
 
         # ffmpeg command: convert to 16kHz mono WAV (required by Whisper)
         command = [
