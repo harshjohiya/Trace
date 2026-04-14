@@ -46,7 +46,7 @@ for i, b in enumerate(extraction['blockers'], 1):
 
 print(f"\nKEY TOPICS:")
 for t in extraction['key_topics']:
-    print(f"  • {t}")
+    print(f"  - {t}")
 
 print(f"\nMETADATA:")
 meta = extraction['metadata']
@@ -54,4 +54,4 @@ print(f"  Extraction time : {meta['extraction_time_sec']}s")
 print(f"  Chunks processed: {meta['chunks_processed']}")
 print(f"  Model used      : {meta['model_used']}")
 
-print(f"\nSaved → data/extractions/test_meeting_001.json ✓")
+print(f"\nSaved -> data/extractions/test_meeting_001.json [ok]")

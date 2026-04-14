@@ -36,7 +36,25 @@ class MeetingExtractor:
         """Make sure Ollama is running and model is available."""
         try:
             models = self.client.list()
-            available = [m.model for m in models.models]
+
+            # Ollama python client response shape differs by version:
+            # - object style: resp.models -> list[Model]
+            # - dict style:   {"models": [{...}, ...]}
+            raw_models = []
+            if isinstance(models, dict):
+                raw_models = models.get("models", []) or []
+            else:
+                raw_models = getattr(models, "models", []) or []
+
+            available = []
+            for m in raw_models:
+                if isinstance(m, dict):
+                    name = m.get("model") or m.get("name")
+                else:
+                    name = getattr(m, "model", None) or getattr(m, "name", None)
+                if name:
+                    available.append(name)
+
             # Check if our model is available (flexible match)
             match = any(
                 self.model.split(":")[0] in m for m in available
@@ -47,7 +65,7 @@ class MeetingExtractor:
                     f"Available: {available}\n"
                     f"Run: ollama pull {self.model}"
                 )
-            print(f"[Extractor] Ollama ready. Model: {self.model} ✓")
+            print(f"[Extractor] Ollama ready. Model: {self.model} [ok]")
         except Exception as e:
             if "Connection" in str(e) or "refused" in str(e).lower():
                 raise RuntimeError(
@@ -127,6 +145,14 @@ class MeetingExtractor:
                         "num_predict": 1024,
                     }
                 )
+                # Ollama chat response can be object-style or dict-style.
+                if isinstance(response, dict):
+                    return (
+                        response.get("message", {}).get("content", "")
+                        if isinstance(response.get("message"), dict)
+                        else ""
+                    )
+
                 return response.message.content
 
             except Exception as e:
@@ -205,24 +231,47 @@ class MeetingExtractor:
         """
         print("[Extractor] Aggregating chunks...")
 
-        # Filter out None results
         valid = [r for r in chunk_results if r is not None]
 
         if not valid:
             return self._empty_result()
 
-        # If only one chunk, skip aggregation LLM call
-        if len(valid) == 1:
-            result = valid[0]
-            result["summary"] = ""
-            return result
-
+        # Even single chunks go through aggregation
+        # so summary always gets generated
         chunks_json = json.dumps(valid, indent=2)
         prompt      = AGGREGATION_PROMPT.format(chunks_json=chunks_json)
         raw         = self._call_llm(prompt)
         result      = self._parse_json_response(raw, context="aggregation")
 
-        return result if result else self._merge_chunks_simple(valid)
+        if result:
+            # Force summary generation if still null
+            if not result.get("summary"):
+                result["summary"] = self._generate_summary_fallback(valid)
+            return result
+
+        return self._merge_chunks_simple(valid)
+
+    def _generate_summary_fallback(self, chunks: list[dict]) -> str:
+        """Generate summary separately if aggregation didn't produce one."""
+        print("[Extractor] Generating summary separately...")
+        all_topics = []
+        all_decisions = []
+        for c in chunks:
+            all_topics.extend(c.get("key_topics", []))
+            all_decisions.extend(
+                d.get("decision","") for d in c.get("decisions", [])
+            )
+
+        prompt = f"""Write a 2-3 sentence meeting summary based on:
+Topics discussed: {', '.join(all_topics[:6])}
+Decisions made: {', '.join(all_decisions[:4])}
+
+Return ONLY the summary text, no JSON, no labels."""
+
+        try:
+            return self._call_llm(prompt).strip()
+        except Exception:
+            return "Meeting summary not available."
 
     def _merge_chunks_simple(self, chunks: list[dict]) -> dict:
         """
@@ -346,7 +395,7 @@ class MeetingExtractor:
             }
         }
 
-        print(f"[Extractor] Done in {elapsed}s ✓")
+        print(f"[Extractor] Done in {elapsed}s [ok]")
         print(f"[Extractor] Found: "
               f"{len(output['action_items'])} action items | "
               f"{len(output['decisions'])} decisions | "
@@ -360,5 +409,5 @@ class MeetingExtractor:
         path = Path(output_dir) / f"{extraction['meeting_id']}.json"
         with open(path, "w", encoding="utf-8") as f:
             json.dump(extraction, f, indent=2, ensure_ascii=False)
-        print(f"[Extractor] Saved → {path}")
+        print(f"[Extractor] Saved -> {path}")
         return str(path)

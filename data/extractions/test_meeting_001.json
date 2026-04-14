@@ -1,0 +1,72 @@
+{
+  "meeting_id": "test_meeting_001",
+  "created_at": "2026-04-14T12:07:22.027983",
+  "title": "Introduction to Logiteam Training Process",
+  "meeting_type": "onboarding",
+  "duration_sec": 257.78,
+  "speakers": [
+    "Participant_2",
+    "Participant_1",
+    "Tarek"
+  ],
+  "action_items": [
+    {
+      "task": "send me an email so I can double check the email address I have in your file",
+      "owner": "Ken",
+      "deadline": null,
+      "mentioned_by": "Tarek"
+    },
+    {
+      "task": "sign electronically and send a document directly to Tarek",
+      "owner": "Maria and Ken (Unassigned)",
+      "deadline": "today",
+      "mentioned_by": "Tarek"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "you don't need your own device, we will set up your account on the computer you'll be using for work",
+      "made_by": "Participant_1 (Angela)"
+    },
+    {
+      "decision": "in the next two weeks, you'll become experts of Logiteam",
+      "made_by": "Participant_1 (Angela)"
+    },
+    {
+      "decision": "You don't need your own device. We will set up your account on the computer you'll be using for work.",
+      "made_by": "Participant_1"
+    },
+    {
+      "decision": "We use a video conferencing tool that will be covered during your training.",
+      "made_by": "Participant_1"
+    }
+  ],
+  "blockers": [
+    {
+      "blocker": "missing document",
+      "affects": "Tarek"
+    },
+    {
+      "blocker": "unsigned document",
+      "affects": "Maria and Ken"
+    },
+    {
+      "blocker": null,
+      "affects": null
+    }
+  ],
+  "key_topics": [
+    "Introduction to training process",
+    "Company overview and product information",
+    "Training duties and responsibilities",
+    "Device usage during training",
+    "Video conferencing tool"
+  ],
+  "summary": "This meeting covered the introduction to the training process, company overview, and product information. The participants will become experts in Logiteam within two weeks. Device usage and video conferencing tools were also discussed.",
+  "metadata": {
+    "extraction_time_sec": 573.0,
+    "chunks_processed": 2,
+    "model_used": "llama3.1:8b",
+    "segment_count": 21
+  }
+}
