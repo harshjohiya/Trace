@@ -331,6 +331,84 @@ Return ONLY the summary text, no JSON, no labels."""
             "summary":      ""
         }
 
+    def _clean_extraction(self, data: dict) -> dict:
+        """
+        Post-process LLM output to remove:
+        - Null/empty entries in any list
+        - Duplicate decisions and action items
+        - Overly long task descriptions (trim to clean phrases)
+        """
+        # ── Remove null/empty blockers ───────────────────────
+        data["blockers"] = [
+            b for b in data.get("blockers", [])
+            if isinstance(b, dict) and b.get("blocker") and b.get("affects")
+        ]
+
+        # ── Remove null/empty action items ───────────────────
+        data["action_items"] = [
+            a for a in data.get("action_items", [])
+            if isinstance(a, dict) and a.get("task") and a.get("owner")
+        ]
+
+        # ── Deduplicate decisions ────────────────────────────
+        seen = set()
+        clean_dec = []
+        for d in data.get("decisions", []):
+            if not isinstance(d, dict):
+                continue
+            # Normalize: lowercase + first 60 chars as key
+            key = d.get("decision", "").lower().strip()[:60]
+            if key and key not in seen:
+                clean_dec.append(d)
+                seen.add(key)
+        data["decisions"] = clean_dec
+
+        # ── Deduplicate action items ─────────────────────────
+        seen = set()
+        clean_acts = []
+        for a in data.get("action_items", []):
+            if not isinstance(a, dict):
+                continue
+
+            # Trim long task descriptions to a clean phrase.
+            task = a.get("task", "").strip()
+            task = re.sub(r"\s+", " ", task)
+            if len(task) > 140:
+                task = task[:140].rsplit(" ", 1)[0].strip(" ,.;:")
+                a["task"] = task
+
+            key = task.lower()[:60]
+            if key and key not in seen:
+                clean_acts.append(a)
+                seen.add(key)
+        data["action_items"] = clean_acts
+
+        # ── Deduplicate blockers ─────────────────────────────
+        seen = set()
+        clean_blocks = []
+        for b in data.get("blockers", []):
+            if not isinstance(b, dict):
+                continue
+            key = b.get("blocker", "").lower().strip()[:60]
+            if key and key not in seen:
+                clean_blocks.append(b)
+                seen.add(key)
+        data["blockers"] = clean_blocks
+
+        # ── Deduplicate key topics ───────────────────────────
+        seen = set()
+        clean_topics = []
+        for t in data.get("key_topics", []):
+            if not isinstance(t, str):
+                continue
+            key = t.lower().strip()[:50]
+            if key and key not in seen:
+                clean_topics.append(t)
+                seen.add(key)
+        data["key_topics"] = clean_topics
+
+        return data
+
     # ──────────────────────────────────────────────────────
     # PUBLIC API
     # ──────────────────────────────────────────────────────
@@ -371,6 +449,9 @@ Return ONLY the summary text, no JSON, no labels."""
             final.get("summary", ""),
             final.get("key_topics", [])
         )
+
+        # Step 4.5: Clean up LLM artifacts
+        final = self._clean_extraction(final)
 
         # Step 5: Build final output
         elapsed = round(time.time() - start_time, 1)
