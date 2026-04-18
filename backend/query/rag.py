@@ -27,22 +27,17 @@ class MeetingQueryEngine:
     def _build_context(self, query: str) -> tuple[str, list]:
         """
         Retrieve relevant facts + transcript chunks for the query.
-        Returns formatted context string + source list.
         """
-        # Search structured facts first
-        fact_hits = self.vs.search_extractions(query, n_results=6)
+        fact_hits       = self.vs.search_extractions(query, n_results=8)
+        transcript_hits = self.vs.search_transcripts(query, n_results=3)
 
-        # Search raw transcript for supporting dialogue
-        transcript_hits = self.vs.search_transcripts(query, n_results=2)
-
-        sources  = []
+        sources = []
         context_parts = []
 
-        # Add structured facts
         if fact_hits:
             context_parts.append("=== EXTRACTED FACTS ===")
             for hit in fact_hits:
-                if hit["score"] > 0.3:   # relevance threshold
+                if hit["score"] > 0.15:    # lowered from 0.3
                     context_parts.append(
                         f"[{hit['type'].upper()} | "
                         f"Meeting: {hit['meeting_id']} | "
@@ -55,14 +50,13 @@ class MeetingQueryEngine:
                         "score":      hit["score"]
                     })
 
-        # Add transcript excerpts
         if transcript_hits:
             context_parts.append("\n=== RELEVANT TRANSCRIPT EXCERPTS ===")
             for hit in transcript_hits:
-                if hit["score"] > 0.3:
+                if hit["score"] > 0.15:    # lowered from 0.3
                     context_parts.append(
                         f"[Meeting: {hit['meeting_id']} | "
-                        f"{hit['start_time']}s - {hit['end_time']}s]\n"
+                        f"{hit['start_time']}s-{hit['end_time']}s]\n"
                         f"{hit['text']}"
                     )
                     sources.append({
@@ -87,7 +81,19 @@ class MeetingQueryEngine:
                 "num_ctx":     4096,
             }
         )
-        return response.message.content.strip()
+        # Ollama response may be dict-style or object-style depending
+        # on client/server version.
+        if isinstance(response, dict):
+            message = response.get("message", {})
+            if isinstance(message, dict):
+                return message.get("content", "").strip()
+            return ""
+
+        message = getattr(response, "message", None)
+        if message is not None:
+            return getattr(message, "content", "").strip()
+
+        return ""
 
     def ask(self, question: str) -> dict:
         """
@@ -154,18 +160,14 @@ Answer based strictly on the context above:"""
               f"(top score: {top_score})")
         return result
 
-    def ask_structured(self, question: str,
-                       filter_type: str = None) -> dict:
+    def ask_structured(
+        self,
+        question: str,
+        filter_type: str = None
+    ) -> dict:
         """
         Query with type filter for precise structured lookups.
-
-        filter_type: "action_item" | "decision" | "blocker"
-
-        Example:
-          engine.ask_structured(
-              "What are all the blockers?",
-              filter_type="blocker"
-          )
+        Lower threshold so short facts are always returned.
         """
         hits = self.vs.search_extractions(
             question,
@@ -173,7 +175,8 @@ Answer based strictly on the context above:"""
             filter_type=filter_type
         )
 
-        relevant = [h for h in hits if h["score"] > 0.25]
+        # Much lower threshold for structured - we WANT all facts of that type
+        relevant = [h for h in hits if h["score"] > 0.05]
 
         return {
             "question": question,

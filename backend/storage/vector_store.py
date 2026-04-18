@@ -2,6 +2,7 @@ import chromadb
 import json
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
+from chromadb.config import Settings
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
 from backend.config import config
@@ -19,7 +20,16 @@ class VectorStore:
 
     def __init__(self):
         self.client = chromadb.PersistentClient(
-            path=config.CHROMA_PATH
+            path=config.CHROMA_PATH,
+            settings=Settings(
+                anonymized_telemetry=False,
+                chroma_product_telemetry_impl=(
+                    "backend.storage.chroma_noop_telemetry.NoOpProductTelemetry"
+                ),
+                chroma_telemetry_impl=(
+                    "backend.storage.chroma_noop_telemetry.NoOpProductTelemetry"
+                )
+            )
         )
         self.embed_model = SentenceTransformer(
             "all-MiniLM-L6-v2"   # fast + accurate, 384-dim embeddings
@@ -224,10 +234,34 @@ class VectorStore:
     # SEARCHING
     # ──────────────────────────────────────────────────────
 
+    def _expand_query(self, query: str) -> str:
+        """
+        Expand query with synonyms to improve semantic matching.
+        Short queries often miss short facts due to embedding mismatch.
+        """
+        expansions = {
+            "what does": "tasks responsibilities duties",
+            "need to do": "action item task assigned responsibility",
+            "blocking": "blocker problem issue preventing",
+            "decisions": "decided agreed resolved concluded",
+            "how long": "duration timeline period weeks days",
+            "training": "onboarding learning training period weeks",
+            "who is assigned": "owner responsible assigned person",
+            "deadline": "due date when timeline",
+        }
+
+        expanded = query
+        for phrase, addition in expansions.items():
+            if phrase.lower() in query.lower():
+                expanded = f"{query} {addition}"
+                break
+
+        return expanded
+
     def search_extractions(
         self,
         query: str,
-        n_results: int = 5,
+        n_results: int = 8,
         filter_type: str = None
     ) -> list[dict]:
         """
@@ -236,13 +270,19 @@ class VectorStore:
 
         filter_type: "action_item" | "decision" | "blocker" | None
         """
-        query_embedding = self._embed([query])[0]
+        # Query expansion improves match quality for short intents.
+        expanded_query = self._expand_query(query)
+        query_embedding = self._embed([expanded_query])[0]
+
+        total_docs = self.extractions.count()
+        if total_docs == 0:
+            return []
 
         where = {"type": filter_type} if filter_type else None
 
         results = self.extractions.query(
             query_embeddings=[query_embedding],
-            n_results=min(n_results, self.extractions.count() or 1),
+            n_results=min(n_results, total_docs),
             where=where,
             include=["documents", "metadatas", "distances"]
         )
@@ -276,11 +316,16 @@ class VectorStore:
         Semantic search over raw transcript chunks.
         Used to retrieve context for RAG answers.
         """
-        query_embedding = self._embed([query])[0]
+        expanded = self._expand_query(query)
+        query_embedding = self._embed([expanded])[0]
+
+        total_docs = self.transcripts.count()
+        if total_docs == 0:
+            return []
 
         results = self.transcripts.query(
             query_embeddings=[query_embedding],
-            n_results=min(n_results, self.transcripts.count() or 1),
+            n_results=min(n_results, total_docs),
             include=["documents", "metadatas", "distances"]
         )
 

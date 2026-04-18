@@ -44,6 +44,7 @@ frontend/build/
 # Data / artifacts
 *.sqlite
 *.db
+data/chroma_db/
 *.wav
 *.mp3
 *.mp4
