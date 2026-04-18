@@ -129,22 +129,23 @@ class MeetingExtractor:
         for attempt in range(max_retries):
             try:
                 response = self.client.chat(
-                    model=self.model,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": EXTRACTION_SYSTEM_PROMPT
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ],
-                    options={
-                        "temperature": 0.0,   # deterministic — no creativity
-                        "num_predict": 1024,
-                    }
-                )
+    model=self.model,
+    messages=[
+        {
+            "role": "system",
+            "content": EXTRACTION_SYSTEM_PROMPT
+        },
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ],
+    options={
+        "temperature": 0.0,
+        "num_predict": 800,    # was 1024 — shorter = faster
+        "num_ctx":     4096,   # limit context window
+    }
+)
                 # Ollama chat response can be object-style or dict-style.
                 if isinstance(response, dict):
                     return (
