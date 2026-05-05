@@ -41,7 +41,7 @@ transcriber     = Transcriber()
 extractor       = MeetingExtractor()
 vector_store    = VectorStore()
 query_engine    = MeetingQueryEngine(vector_store=vector_store)
-print("[API] All models ready ✓")
+print("[API] All models ready [ok]")
 
 # ── In-memory job tracker ────────────────────────────────
 # In production this would be Redis — fine for demo
@@ -157,10 +157,13 @@ async def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
     try:
         # Step 1: Convert audio
         update_job("converting", 10)
+        print(f"[Pipeline] {job_id} — converting audio: {audio_path}")
         wav_path = audio_processor.convert_to_wav(audio_path)
+        print(f"[Pipeline] {job_id} — converted to: {wav_path}")
 
         # Step 2: Transcribe + diarize
         update_job("transcribing", 25)
+        print(f"[Pipeline] {job_id} — transcribing...")
         transcript = transcriber.transcribe(wav_path, meeting_id=meeting_id)
 
         # Save transcript
@@ -168,27 +171,32 @@ async def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
         transcript_path.parent.mkdir(parents=True, exist_ok=True)
         with open(transcript_path, "w", encoding="utf-8") as f:
             json.dump(transcript, f, indent=2)
+        print(f"[Pipeline] {job_id} — transcript saved")
 
         # Step 3: Extract structured data
         update_job("extracting", 60)
+        print(f"[Pipeline] {job_id} — extracting...")
         extraction = extractor.extract(transcript)
         extractor.save(extraction)
+        print(f"[Pipeline] {job_id} — extraction saved")
 
         # Step 4: Index in vector DB
         update_job("indexing", 85)
+        print(f"[Pipeline] {job_id} — indexing...")
         vector_store.index_transcript(transcript)
         vector_store.index_extraction(extraction)
+        print(f"[Pipeline] {job_id} — indexed")
 
         # Done
         update_job("completed", 100)
         jobs[job_id]["completed_at"] = datetime.now().isoformat()
-        jobs[job_id]["meeting_id"]   = meeting_id
-
-        print(f"[API] Pipeline complete for job {job_id}")
+        print(f"[Pipeline] {job_id} — COMPLETE")
 
     except Exception as e:
-        update_job("failed", 0, error=str(e))
-        print(f"[API] Pipeline failed for job {job_id}: {e}")
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"[Pipeline] {job_id} — FAILED:\n{error_detail}")
+        update_job("failed", 0, error=f"{type(e).__name__}: {str(e)}")
 
 
 # ── Job status ───────────────────────────────────────────

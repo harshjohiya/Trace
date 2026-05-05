@@ -124,12 +124,14 @@ class MeetingQueryEngine:
         system_prompt = """You are a meeting intelligence assistant.
 Answer questions using ONLY the provided meeting context.
 
-RULES:
-- Answer directly and concisely
-- If the context doesn't contain the answer, say so clearly
-- Reference specific speakers and meetings when relevant
-- For lists (tasks, decisions), use numbered format
-- Never make up information not in the context"""
+CRITICAL RULES:
+- Answer in clean plain English only
+- NEVER repeat or echo the context format tags like [DECISION], [ACTION_ITEM], [Meeting:], [Relevance:]
+- NEVER include metadata labels in your answer
+- Extract the actual content and present it naturally
+- If multiple items found, use a numbered list
+- If context doesn't contain the answer, say "Not found in meeting records"
+- Keep answers concise and direct"""
 
         user_prompt = f"""MEETING CONTEXT:
 {context}
