@@ -1,3 +1,6 @@
+import sys
+sys.stdout.reconfigure(encoding="utf-8")
+
 import requests
 import json
 import time
@@ -70,38 +73,47 @@ for item in result["results"]:
         print(f"  • {raw.get('decision','?')}")
         print(f"    → by {raw.get('made_by','?')}")
 
-# ── Upload test ───────────────────────────────────────────
+# ── Upload test (only if no meetings exist) ───────────────
 print(f"\n{'─' * 50}")
 print("Upload test:")
 
-with open("data/audio/audio 1.mp3", "rb") as f:
-    r = requests.post(
-        f"{BASE}/meetings/upload",
-        files={"file": ("audio_1.mp3", f, "audio/mpeg")}
-    )
+if data["count"] > 0:
+    print("  ⏭ Skipping upload — meetings already exist in DB.")
+    print(f"  (Use DELETE /meetings/{{id}} to clear before re-testing upload)")
+else:
+    with open("data/audio/audio 1.mp3", "rb") as f:
+        r = requests.post(
+            f"{BASE}/meetings/upload",
+            files={"file": ("audio_1.mp3", f, "audio/mpeg")}
+        )
 
-job = r.json()
-print(f"  Job created : {job['job_id']}")
-print(f"  Meeting ID  : {job['meeting_id']}")
-print(f"  Polling every 10s (pipeline takes 3-5 mins)...")
+    job = r.json()
 
-# Poll longer — pipeline takes time
-for i in range(40):
-    time.sleep(10)
-    r      = requests.get(f"{BASE}/jobs/{job['job_id']}")
-    status = r.json()
-    print(f"  [{i*10}s] → {status['status']} ({status['progress']}%)")
+    # Handle duplicate detection
+    if job.get("status") == "duplicate":
+        print(f"  ⏭ Duplicate detected: {job['message']}")
+    else:
+        print(f"  Job created : {job['job_id']}")
+        print(f"  Meeting ID  : {job['meeting_id']}")
+        print(f"  Polling every 10s (pipeline takes 3-5 mins)...")
 
-    if status["status"] == "completed":
-        print(f"\n  ✓ Pipeline complete!")
-        print(f"  Meeting: {status['meeting_id']}")
-        break
+        # Poll for completion
+        for i in range(40):
+            time.sleep(10)
+            r      = requests.get(f"{BASE}/jobs/{job['job_id']}")
+            status = r.json()
+            print(f"  [{i*10}s] → {status['status']} ({status['progress']}%)")
 
-    if status["status"] == "failed":
-        print(f"\n  ✗ Pipeline failed!")
-        print(f"  Error: {status.get('error', 'unknown')}")
-        print(f"\n  → Check the uvicorn terminal for full traceback")
-        break
+            if status["status"] == "completed":
+                print(f"\n  ✓ Pipeline complete!")
+                print(f"  Meeting: {status['meeting_id']}")
+                break
+
+            if status["status"] == "failed":
+                print(f"\n  ✗ Pipeline failed!")
+                print(f"  Error: {status.get('error', 'unknown')}")
+                print(f"\n  → Check the uvicorn terminal for full traceback")
+                break
 
 print(f"\n{'=' * 55}")
 print("API test complete ✓")

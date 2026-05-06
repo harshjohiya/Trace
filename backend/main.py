@@ -33,6 +33,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 import json
 import uuid
+import hashlib
 import shutil
 from datetime import datetime
 from typing import Optional
@@ -76,6 +77,30 @@ print("[API] All models ready [ok]")
 # In production this would be Redis — fine for demo
 jobs: dict = {}
 
+# ── Audio hash registry — prevents duplicate uploads ─────
+_HASH_REGISTRY_PATH = Path("data/audio_hashes.json")
+
+def _load_hash_registry() -> dict:
+    """Load hash→meeting_id mapping from disk."""
+    if _HASH_REGISTRY_PATH.exists():
+        with open(_HASH_REGISTRY_PATH, "r") as f:
+            return json.load(f)
+    return {}
+
+def _save_hash_registry(registry: dict):
+    """Persist hash→meeting_id mapping to disk."""
+    _HASH_REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(_HASH_REGISTRY_PATH, "w") as f:
+        json.dump(registry, f, indent=2)
+
+def _hash_file(file_path: str) -> str:
+    """Compute SHA-256 hash of a file."""
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
 # ── Pydantic models ──────────────────────────────────────
 class QueryRequest(BaseModel):
     question: str
@@ -98,13 +123,14 @@ def root():
         "version": "1.0.0",
         "status":  "running",
         "endpoints": [
-            "POST /meetings/upload",
-            "GET  /meetings",
-            "GET  /meetings/{meeting_id}",
-            "GET  /meetings/{meeting_id}/transcript",
-            "GET  /meetings/{meeting_id}/extraction",
-            "POST /query",
-            "GET  /jobs/{job_id}",
+            "POST   /meetings/upload",
+            "GET    /meetings",
+            "GET    /meetings/{meeting_id}",
+            "GET    /meetings/{meeting_id}/transcript",
+            "GET    /meetings/{meeting_id}/extraction",
+            "DELETE /meetings/{meeting_id}",
+            "POST   /query",
+            "GET    /jobs/{job_id}",
         ]
     }
 
@@ -126,6 +152,7 @@ async def upload_meeting(
       audio → transcript → extraction → vector index
 
     Returns a job_id to poll for status.
+    If the same audio was already uploaded, returns the existing meeting.
     """
     # Validate file type
     allowed = {".mp3", ".mp4", ".wav", ".m4a", ".ogg", ".webm", ".flac"}
@@ -137,13 +164,34 @@ async def upload_meeting(
                    f"Allowed: {', '.join(allowed)}"
         )
 
-    # Save uploaded file
+    # Save uploaded file to a temp path first
     meeting_id  = f"meeting_{uuid.uuid4().hex[:8]}"
     upload_path = Path(config.AUDIO_DIR) / f"{meeting_id}{suffix}"
     upload_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(upload_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
+
+    # ── Dedup check: hash file content, reject if already processed ──
+    file_hash = _hash_file(str(upload_path))
+    registry  = _load_hash_registry()
+
+    if file_hash in registry:
+        # Same audio already processed — clean up and return existing
+        existing_id = registry[file_hash]
+        upload_path.unlink(missing_ok=True)
+        print(f"[Upload] Duplicate detected: {file.filename} "
+              f"matches existing {existing_id}")
+        return {
+            "meeting_id": existing_id,
+            "status":     "duplicate",
+            "message":    f"This audio was already processed as {existing_id}. "
+                          f"No duplicate created."
+        }
+
+    # Register this hash → meeting_id
+    registry[file_hash] = meeting_id
+    _save_hash_registry(registry)
 
     # Create job
     job_id        = f"job_{uuid.uuid4().hex[:8]}"
@@ -360,4 +408,75 @@ def get_decisions(meeting_id: str):
         "decisions":  meeting.get("decisions", []),
         "count":      len(meeting.get("decisions", []))
     }
-    
+
+
+# ── Delete meeting ───────────────────────────────────────
+
+@app.delete("/meetings/{meeting_id}")
+def delete_meeting(meeting_id: str):
+    """Delete a meeting and all its data."""
+    deleted = []
+    errors  = []
+
+    # Remove extraction
+    ext_path = Path(f"data/extractions/{meeting_id}.json")
+    if ext_path.exists():
+        ext_path.unlink()
+        deleted.append("extraction")
+
+    # Remove transcript
+    tr_path = Path(f"data/transcripts/{meeting_id}.json")
+    if tr_path.exists():
+        tr_path.unlink()
+        deleted.append("transcript")
+
+    # Remove from vector DB
+    try:
+        existing = vector_store.extractions.get(
+            where={"meeting_id": meeting_id}
+        )
+        if existing["ids"]:
+            vector_store.extractions.delete(ids=existing["ids"])
+            deleted.append("vector_extractions")
+
+        existing = vector_store.transcripts.get(
+            where={"meeting_id": meeting_id}
+        )
+        if existing["ids"]:
+            vector_store.transcripts.delete(ids=existing["ids"])
+            deleted.append("vector_transcripts")
+    except Exception as e:
+        errors.append(str(e))
+
+    # Remove from hash registry so re-upload is allowed
+    try:
+        registry = _load_hash_registry()
+        hashes_to_remove = [
+            h for h, mid in registry.items() if mid == meeting_id
+        ]
+        for h in hashes_to_remove:
+            del registry[h]
+        if hashes_to_remove:
+            _save_hash_registry(registry)
+            deleted.append("hash_registry")
+    except Exception as e:
+        errors.append(str(e))
+
+    # Remove audio files
+    audio_dir = Path(config.AUDIO_DIR)
+    for f in audio_dir.glob(f"*{meeting_id}*"):
+        f.unlink(missing_ok=True)
+        deleted.append(f"audio:{f.name}")
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Meeting {meeting_id} not found"
+        )
+
+    return {
+        "meeting_id": meeting_id,
+        "deleted":    deleted,
+        "errors":     errors,
+        "message":    f"Meeting {meeting_id} removed successfully"
+    }
