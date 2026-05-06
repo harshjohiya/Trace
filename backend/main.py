@@ -1,7 +1,39 @@
+import sys
+import os
+from pathlib import Path
+
+# ── Force venv libraries — prevents system Python conflicts ──
+_venv_root = Path(__file__).parent.parent / "venv"
+_site_packages = (
+    _venv_root / "Lib" / "site-packages"
+)
+
+if _site_packages.exists():
+    # Insert venv site-packages at front so it wins over system Python
+    venv_path = str(_site_packages)
+    if venv_path not in sys.path:
+        sys.path.insert(0, venv_path)
+    # Remove ONLY the system Python site-packages (keep stdlib paths like Lib, DLLs)
+    sys.path = [
+        p for p in sys.path
+        if not (
+            "AppData\\Local\\Programs\\Python" in p
+            and "site-packages" in p
+        )
+        or "Trace\\venv" in p
+    ]
+
+# Set environment variable so child processes also use venv
+os.environ["PYTHONPATH"] = str(_site_packages)
+
+# Disable speechbrain lazy loading — prevents k2_fsa import crash
+os.environ["SB_ENABLE_LAZY_LOAD"] = "0"
+
+sys.path.append(str(Path(__file__).parent.parent))
+
 import json
 import uuid
 import shutil
-from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
@@ -9,9 +41,6 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-
-import sys
-sys.path.append(str(Path(__file__).parent.parent))
 
 from backend.ingestion.audio_processor import AudioProcessor
 from backend.ingestion.transcriber import Transcriber
@@ -143,10 +172,14 @@ async def upload_meeting(
 
 
 async def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
-    """
-    Full processing pipeline run as background task.
-    Updates job status at each step.
-    """
+    """Full processing pipeline as background task."""
+
+    # Re-inject venv path inside background thread
+    venv_site = str(
+        Path(__file__).parent.parent / "venv" / "Lib" / "site-packages"
+    )
+    if venv_site not in sys.path:
+        sys.path.insert(0, venv_site)
     def update_job(status: str, progress: int, error: str = None):
         jobs[job_id].update({
             "status":   status,
@@ -327,3 +360,4 @@ def get_decisions(meeting_id: str):
         "decisions":  meeting.get("decisions", []),
         "count":      len(meeting.get("decisions", []))
     }
+    
