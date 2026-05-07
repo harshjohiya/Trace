@@ -17,6 +17,9 @@ class Transcriber:
         self.device = config.DEVICE
         self.model = None
         self.diarize_model = None
+        # When True we use whisperx APIs (alignment + helpers).
+        # When False we fall back to faster_whisper (no alignment).
+        self._whisperx_mode = True
         self.batch_size = 8
         print(f"[Transcriber] Using device: {self.device}")
         print(f"[Transcriber] CUDA available: {torch.cuda.is_available()}")
@@ -115,45 +118,75 @@ class Transcriber:
             self._load_diarization()
 
     def _load_whisper(self, model_name, device, compute_type):
-        import whisperx
-
-        print(f"[Transcriber] Loading Whisper: model={model_name} "
-              f"device={device} compute={compute_type}")
-
-        self._patch_vad_loader()
-        extra = self._get_faster_whisper_extra_options()
-
+        # WhisperX imports can pull in heavy deps (pyannote, torchmetrics,
+        # matplotlib) which may fail under restrictive Windows App Control
+        # policies. Try to import whisperx first and fall back to
+        # faster_whisper when import fails.
         try:
-            self.model = whisperx.load_model(
-                model_name,
-                device,
-                compute_type=compute_type,
-                language="en",
-                asr_options=extra if extra else None
-            )
-        except RuntimeError as e:
-            if "out of memory" in str(e).lower():
-                print("[Transcriber] OOM — falling back to CPU/small...")
-                gc.collect()
-                torch.cuda.empty_cache()
-                self.device = "cpu"
-                self.batch_size = 4
-                self.model = whisperx.load_model(
-                    "small", "cpu",
-                    compute_type="int8",
-                    language="en"
-                )
-            else:
-                raise
+            import whisperx
+            self._whisperx_mode = True
+        except Exception as e:
+            print(f"[Transcriber] whisperx import failed: {e}")
+            print("[Transcriber] Falling back to faster_whisper (no alignment)")
+            self._whisperx_mode = False
 
-        print("[Transcriber] Whisper model loaded [ok]")
+        if self._whisperx_mode:
+            print(f"[Transcriber] Loading WhisperX: model={model_name} "
+                  f"device={device} compute={compute_type}")
+
+            self._patch_vad_loader()
+            extra = self._get_faster_whisper_extra_options()
+
+            try:
+                self.model = whisperx.load_model(
+                    model_name,
+                    device,
+                    compute_type=compute_type,
+                    language="en",
+                    asr_options=extra if extra else None
+                )
+            except RuntimeError as e:
+                if "out of memory" in str(e).lower():
+                    print("[Transcriber] OOM — falling back to CPU/small...")
+                    gc.collect()
+                    torch.cuda.empty_cache()
+                    self.device = "cpu"
+                    self.batch_size = 4
+                    self.model = whisperx.load_model(
+                        "small", "cpu",
+                        compute_type="int8",
+                        language="en"
+                    )
+                else:
+                    raise
+
+            print("[Transcriber] WhisperX model loaded [ok]")
+        else:
+            # Try faster_whisper as a lightweight fallback for pure ASR
+            try:
+                from faster_whisper import WhisperModel
+                print(f"[Transcriber] Loading faster_whisper: model={model_name} "
+                      f"device={device} compute={compute_type}")
+                self.model = WhisperModel(model_name, device=device, compute_type=compute_type)
+                print("[Transcriber] faster_whisper model loaded [ok]")
+            except Exception as e:
+                raise RuntimeError(
+                    "Failed to import whisperx and faster_whisper is unavailable. "
+                    "Install whisperx or faster-whisper, or run on a machine without App Control blocking DLLs."
+                ) from e
 
     def _load_diarization(self):
         """
         Load pyannote speaker diarization pipeline directly.
         Skips whisperx's broken wrapper entirely.
         """
-        from pyannote.audio import Pipeline
+        try:
+            from pyannote.audio import Pipeline
+        except Exception as e:
+            print(f"[Transcriber] pyannote import failed: {e}")
+            print("[Transcriber] Diarization disabled — continuing without speaker diarization.")
+            self.diarize_model = None
+            return
 
         if not config.HF_TOKEN:
             raise ValueError(
@@ -168,8 +201,6 @@ class Transcriber:
                 "pyannote/speaker-diarization-3.1",
                 use_auth_token=config.HF_TOKEN
             )
-            # pyannote internals vary by version; apply optional clustering
-            # tuning only when compatible attributes are exposed.
             clustering = getattr(pipeline, "_clustering", None)
             if clustering is not None:
                 if hasattr(clustering, "threshold"):
@@ -192,7 +223,8 @@ class Transcriber:
                     "  3. https://huggingface.co/pyannote/wespeaker-voxceleb-resnet34-LM\n\n"
                     "After accepting, wait 2 min then rerun.\n"
                 ) from e
-            raise
+            print(f"[Transcriber] Diarization loading failed: {e}\nContinuing without diarization.")
+            self.diarize_model = None
 
     # ──────────────────────────────────────────────────────────
     # SPEAKER COUNT ESTIMATION
@@ -268,8 +300,6 @@ class Transcriber:
           4. Auto-identify speaker names
           5. Build + save structured JSON
         """
-        import whisperx
-
         self.load_models()
 
         audio_path = str(audio_path)
@@ -279,47 +309,71 @@ class Transcriber:
 
         # ── Step 1: Transcribe ───────────────────────────────
         print("[Transcriber] Step 1/3: Transcribing speech...")
-        audio  = whisperx.load_audio(audio_path)
-        result = self.model.transcribe(
-            audio,
-            batch_size=self.batch_size,
-            language="en"
-        )
+        if self._whisperx_mode:
+            import whisperx
+            audio = whisperx.load_audio(audio_path)
+            result = self.model.transcribe(
+                audio,
+                batch_size=self.batch_size,
+                language="en"
+            )
+        else:
+            # faster_whisper fallback: transcribe from file path
+            print("[Transcriber] Using faster_whisper for ASR (no alignment).")
+            segments, info = self.model.transcribe(audio_path, beam_size=5, language="en")
+            segs = []
+            for s in segments:
+                # faster_whisper segments have start, end, text attributes
+                segs.append({"start": float(s.start), "end": float(s.end), "text": s.text})
+            result = {"language": getattr(info, "language", "en"), "segments": segs}
+
         print(f"[Transcriber] Got {len(result['segments'])} raw segments")
 
-        # ── Step 2: Align timestamps ─────────────────────────
-        print("[Transcriber] Step 2/3: Aligning timestamps...")
-        align_model, metadata = whisperx.load_align_model(
-            language_code=result["language"],
-            device=self.device
-        )
-        result = whisperx.align(
-            result["segments"], align_model,
-            metadata, audio, self.device,
-            return_char_alignments=False
-        )
-        del align_model
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        # ── Step 2: Align timestamps (whisperx only) ─────────
+        if self._whisperx_mode:
+            print("[Transcriber] Step 2/3: Aligning timestamps...")
+            align_model, metadata = whisperx.load_align_model(
+                language_code=result["language"],
+                device=self.device
+            )
+            result = whisperx.align(
+                result["segments"], align_model,
+                metadata, audio, self.device,
+                return_char_alignments=False
+            )
+            del align_model
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        else:
+            print("[Transcriber] Skipping alignment (not available without whisperx)")
 
         # ── Step 3: Diarize ──────────────────────────────────
         print("[Transcriber] Step 3/3: Identifying speakers...")
-        estimated = self._estimate_speaker_count(audio)
-        print(f"[Transcriber] Estimated speakers: {estimated}")
+        if self.diarize_model is None:
+            print("[Transcriber] Diarization disabled — assigning single speaker to all segments")
+            for seg in result["segments"]:
+                seg["speaker"] = "SPEAKER_00"
+        else:
+            # Use a conservative default estimate when we don't have raw audio array
+            if self._whisperx_mode:
+                estimated = self._estimate_speaker_count(audio)
+            else:
+                estimated = 2
+            print(f"[Transcriber] Estimated speakers: {estimated}")
 
-        diarization = self.diarize_model(
-            audio_path,
-            min_speakers=max(2, estimated - 1),
-            max_speakers=estimated + 2
-        )
-        actual = len(set(
-            spk for _, _, spk in diarization.itertracks(yield_label=True)
-        ))
-        print(f"[Transcriber] Pyannote found: {actual} speakers")
+            diarization = self.diarize_model(
+                audio_path,
+                min_speakers=max(2, estimated - 1),
+                max_speakers=estimated + 2
+            )
+            actual = len(set(
+                spk for _, _, spk in diarization.itertracks(yield_label=True)
+            ))
+            print(f"[Transcriber] Pyannote found: {actual} speakers")
 
-        diarize_df = self._pyannote_to_df(diarization)
-        result     = self._assign_speakers(result, diarize_df)
+            diarize_df = self._pyannote_to_df(diarization)
+            result     = self._assign_speakers(result, diarize_df)
 
         # ── Step 4: Build transcript ─────────────────────────
         transcript = self._build_transcript(result, meeting_id)

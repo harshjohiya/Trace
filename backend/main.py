@@ -177,17 +177,49 @@ async def upload_meeting(
     registry  = _load_hash_registry()
 
     if file_hash in registry:
-        # Same audio already processed — clean up and return existing
-        existing_id = registry[file_hash]
-        upload_path.unlink(missing_ok=True)
-        print(f"[Upload] Duplicate detected: {file.filename} "
-              f"matches existing {existing_id}")
-        return {
-            "meeting_id": existing_id,
-            "status":     "duplicate",
-            "message":    f"This audio was already processed as {existing_id}. "
-                          f"No duplicate created."
-        }
+        existing_entry = registry[file_hash]
+        existing_id = (
+            existing_entry.get("meeting_id")
+            if isinstance(existing_entry, dict)
+            else existing_entry
+        )
+
+        transcript_path = Path(config.TRANSCRIPT_DIR) / f"{existing_id}.json"
+        extraction_path = Path("data/extractions") / f"{existing_id}.json"
+        active_job = next(
+            (job for job in jobs.values()
+             if job.get("meeting_id") == existing_id),
+            None
+        )
+
+        if transcript_path.exists() and extraction_path.exists():
+            # Same audio already processed — clean up and return existing
+            upload_path.unlink(missing_ok=True)
+            print(f"[Upload] Duplicate detected: {file.filename} "
+                  f"matches existing {existing_id}")
+            return {
+                "meeting_id": existing_id,
+                "status":     "duplicate",
+                "message":    f"This audio was already processed as {existing_id}. "
+                              f"No duplicate created."
+            }
+
+        if active_job and active_job.get("status") not in {"failed", "completed"}:
+            # Same audio already in progress — clean up and return existing
+            upload_path.unlink(missing_ok=True)
+            print(f"[Upload] Duplicate in-progress: {file.filename} "
+                  f"matches active {existing_id}")
+            return {
+                "meeting_id": existing_id,
+                "status":     "duplicate",
+                "message":    f"This audio is already processing as {existing_id}. "
+                              f"Please wait for it to finish."
+            }
+
+        # Stale/failed entry — allow reprocess
+        print(f"[Upload] Stale hash entry detected for {existing_id}; reprocessing")
+        registry.pop(file_hash, None)
+        _save_hash_registry(registry)
 
     # Register this hash → meeting_id
     registry[file_hash] = meeting_id
@@ -278,6 +310,22 @@ async def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
         error_detail = traceback.format_exc()
         print(f"[Pipeline] {job_id} — FAILED:\n{error_detail}")
         update_job("failed", 0, error=f"{type(e).__name__}: {str(e)}")
+        # On failure, remove hash entry so the same audio can be retried
+        try:
+            file_hash = _hash_file(audio_path)
+            registry = _load_hash_registry()
+            existing_entry = registry.get(file_hash)
+            existing_id = (
+                existing_entry.get("meeting_id")
+                if isinstance(existing_entry, dict)
+                else existing_entry
+            )
+            if existing_id == meeting_id:
+                registry.pop(file_hash, None)
+                _save_hash_registry(registry)
+                print(f"[Pipeline] {job_id} — removed hash entry for failed {meeting_id}")
+        except Exception as cleanup_err:
+            print(f"[Pipeline] {job_id} — WARNING: failed to cleanup hash entry: {cleanup_err}")
 
 
 # ── Job status ───────────────────────────────────────────
@@ -479,4 +527,4 @@ def delete_meeting(meeting_id: str):
         "deleted":    deleted,
         "errors":     errors,
         "message":    f"Meeting {meeting_id} removed successfully"
-    }
+    }
