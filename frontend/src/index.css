@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-page: #ffffff;
+  --bg-surface: #f8f8fc;
+  --bg-elevated: #f0f0f8;
+  --bg-overlay: rgba(255, 255, 255, 0.85);
+
+  --border-light: #e8e8f0;
+  --border-medium: #d4d4e8;
+  --border-strong: #b4b4d0;
+
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: #eef2ff;
+  --primary-glow: rgba(99, 102, 241, 0.15);
+  --primary-border: #c7d2fe;
+
+  --text-primary: #0f0f1a;
+  --text-secondary: #4b4b63;
+  --text-muted: #9090a8;
+  --text-disabled: #c0c0d8;
+
+  --success: #16a34a;
+  --success-light: #f0fdf4;
+  --success-border: #86efac;
+
+  --warning: #d97706;
+  --warning-light: #fffbeb;
+  --warning-border: #fcd34d;
+
+  --danger: #dc2626;
+  --danger-light: #fef2f2;
+  --danger-border: #fca5a5;
+
+  --info: #2563eb;
+  --info-light: #eff6ff;
+  --info-border: #93c5fd;
+}
+
+@layer base {
+  * {
+    @apply border-border-light;
+  }
+
+  html,
+  body,
+  #root {
+    @apply min-h-screen bg-bg-page font-sans text-text-primary antialiased;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+}
+
+@layer components {
+  .page-enter {
+    @apply mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8;
+  }
+
+  .card-surface {
+    @apply rounded-lg border border-border-light bg-white shadow-sm;
+  }
+}
