@@ -28,11 +28,13 @@ import { getJobStatus, healthCheck, listMeetings, queryMeetings, uploadMeeting }
 import { formatDate, formatDuration, getGreetingByHour } from "@/lib/utils"
 import type { ApiClientError, JobStatus, Meeting, QueryResponse } from "@/types"
 
+type UploadStatus = JobStatus["status"] | "idle" | "uploading"
+
 interface UploadState {
   file: File
   jobId: string | null
   progress: number
-  status: JobStatus["status"] | "idle"
+  status: UploadStatus
 }
 
 export function DashboardPage() {
@@ -168,8 +170,28 @@ export function DashboardPage() {
 
   const handleProcessUpload = async () => {
     if (!uploadState?.file) return
+    const file = uploadState.file
     try {
-      const response = await uploadMeeting(uploadState.file)
+      setUploadState((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "uploading",
+              progress: 0,
+            }
+          : prev,
+      )
+      const response = await uploadMeeting(file, (progress) => {
+        setUploadState((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: "uploading",
+                progress,
+              }
+            : prev,
+        )
+      })
       if (response.status === "duplicate") {
         if (pollTimer.current) window.clearInterval(pollTimer.current)
         toast(response.message)
@@ -196,6 +218,14 @@ export function DashboardPage() {
       startPolling(response.job_id)
     } catch (apiError) {
       toast.error((apiError as ApiClientError).message)
+      setUploadState((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "idle",
+            }
+          : prev,
+      )
     }
   }
 
@@ -515,7 +545,7 @@ function UploadCard({
   onProcessUpload: () => void
   onReset: () => void
 }) {
-  const isProcessing = Boolean(uploadState?.jobId)
+  const isProcessing = Boolean(uploadState?.jobId) || uploadState?.status === "uploading"
 
   return (
     <Card
@@ -563,7 +593,31 @@ function UploadCard({
   )
 }
 
-function ProcessingTracker({ status, progress }: { status: UploadState["status"]; progress: number }) {
+function ProcessingTracker({ status, progress }: { status: UploadStatus; progress: number }) {
+  if (status === "uploading") {
+    return (
+      <div className="space-y-4 text-left">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-primary border-t-transparent text-primary animate-spin" />
+          <div>
+            <p className="font-medium text-primary">Uploading file</p>
+            <p className="text-sm italic text-text-secondary">Sending your recording to Trace...</p>
+          </div>
+        </div>
+        <div className="mt-5">
+          <div className="h-2 w-full rounded-full bg-bg-elevated">
+            <motion.div
+              className="h-2 rounded-full bg-primary"
+              animate={{ width: `${Math.min(progress, 100)}%` }}
+              transition={{ duration: 0.35 }}
+            />
+          </div>
+          <p className="mt-2 text-sm text-text-secondary">{progress}% uploaded</p>
+        </div>
+      </div>
+    )
+  }
+
   const stepIndex = progress < 25 ? 0 : progress < 60 ? 1 : progress < 85 ? 2 : progress < 100 ? 3 : 4
   const steps = [
     { title: "Converting audio", description: "Preparing your recording..." },

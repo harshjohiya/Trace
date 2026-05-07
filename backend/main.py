@@ -142,7 +142,7 @@ def health():
 # ── Upload + process meeting ─────────────────────────────
 
 @app.post("/meetings/upload")
-async def upload_meeting(
+def upload_meeting(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
 ):
@@ -169,11 +169,15 @@ async def upload_meeting(
     upload_path = Path(config.AUDIO_DIR) / f"{meeting_id}{suffix}"
     upload_path.parent.mkdir(parents=True, exist_ok=True)
 
+    sha256 = hashlib.sha256()
     with open(upload_path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+        file.file.seek(0)
+        for chunk in iter(lambda: file.file.read(8192), b""):
+            f.write(chunk)
+            sha256.update(chunk)
 
     # ── Dedup check: hash file content, reject if already processed ──
-    file_hash = _hash_file(str(upload_path))
+    file_hash = sha256.hexdigest()
     registry  = _load_hash_registry()
 
     if file_hash in registry:
@@ -251,7 +255,7 @@ async def upload_meeting(
     }
 
 
-async def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
+def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
     """Full processing pipeline as background task."""
 
     # Re-inject venv path inside background thread

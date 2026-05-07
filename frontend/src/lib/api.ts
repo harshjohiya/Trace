@@ -14,17 +14,31 @@ import type {
 } from "@/types"
 
 const BASE_URL = "http://localhost:8000"
+const DEFAULT_TIMEOUT_MS = 300_000
+const UPLOAD_TIMEOUT_MS = 0
 
 const client = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000,
+  timeout: DEFAULT_TIMEOUT_MS,
 })
 
 function toApiError(error: unknown): ApiClientError {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<{ detail?: string; message?: string }>
     if (axiosError.code === "ECONNABORTED") {
-      return { message: "Request timed out after 30s.", code: axiosError.code }
+      const url = axiosError.config?.url ?? ""
+      if (url.includes("/meetings/upload")) {
+        return {
+          message: "Upload timed out on the client. The server may still be processing it — check Recent Meetings.",
+          code: axiosError.code,
+        }
+      }
+      const timeoutMs = axiosError.config?.timeout ?? DEFAULT_TIMEOUT_MS
+      if (timeoutMs > 0) {
+        const timeoutSec = Math.round(timeoutMs / 1000)
+        return { message: `Request timed out after ${timeoutSec}s.`, code: axiosError.code }
+      }
+      return { message: "Request timed out.", code: axiosError.code }
     }
     if (!axiosError.response) {
       return { message: "Cannot connect to Trace backend. Check if server is running.", code: "NETWORK_ERROR" }
@@ -95,12 +109,23 @@ export async function deleteMeeting(id: string): Promise<DeleteMeetingResponse> 
   }
 }
 
-export async function uploadMeeting(file: File): Promise<UploadMeetingResponse> {
+export async function uploadMeeting(
+  file: File,
+  onUploadProgress?: (progress: number) => void,
+): Promise<UploadMeetingResponse> {
   const formData = new FormData()
   formData.append("file", file)
   try {
     const { data } = await client.post<UploadMeetingResponse>("/meetings/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: UPLOAD_TIMEOUT_MS,
+      onUploadProgress: (event) => {
+        if (!onUploadProgress) return
+        const total = event.total ?? file.size
+        if (!total) return
+        const percent = Math.min(99, Math.round((event.loaded / total) * 100))
+        onUploadProgress(percent)
+      },
     })
     return data
   } catch (error) {
