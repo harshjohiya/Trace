@@ -129,6 +129,7 @@ export function DashboardPage() {
   }
 
   const startPolling = (jobId: string) => {
+    if (!jobId) return
     if (pollTimer.current) {
       window.clearInterval(pollTimer.current)
     }
@@ -158,7 +159,9 @@ export function DashboardPage() {
           setUploadState(null)
         }
       } catch (apiError) {
+        if (pollTimer.current) window.clearInterval(pollTimer.current)
         toast.error((apiError as ApiClientError).message)
+        setUploadState(null)
       }
     }, 6000)
   }
@@ -167,6 +170,19 @@ export function DashboardPage() {
     if (!uploadState?.file) return
     try {
       const response = await uploadMeeting(uploadState.file)
+      if (response.status === "duplicate") {
+        if (pollTimer.current) window.clearInterval(pollTimer.current)
+        toast(response.message)
+        setUploadState(null)
+        void fetchMeetings()
+        return
+      }
+      if (!response.job_id) {
+        if (pollTimer.current) window.clearInterval(pollTimer.current)
+        toast.error("Upload response did not include a job id.")
+        setUploadState(null)
+        return
+      }
       setUploadState((prev) =>
         prev
           ? {

@@ -121,12 +121,20 @@ export interface JobStatus {
   completed_at?: string
 }
 
-export interface UploadMeetingResponse {
+export interface UploadMeetingQueuedResponse {
   job_id: string
   meeting_id: string
   status: "queued"
   message: string
 }
+
+export interface UploadMeetingDuplicateResponse {
+  meeting_id: string
+  status: "duplicate"
+  message: string
+}
+
+export type UploadMeetingResponse = UploadMeetingQueuedResponse | UploadMeetingDuplicateResponse
 
 export interface DeleteMeetingResponse {
   meeting_id: string
