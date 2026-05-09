@@ -253,7 +253,10 @@ export function DashboardPage() {
   }
 
   return (
-    <PageShell className="space-y-8 pb-24">
+    <PageShell className="space-y-8 pb-24 relative">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-purple-500/5 to-transparent -z-10 pointer-events-none" />
+      <div className="fixed -left-40 top-40 h-96 w-96 rounded-full bg-primary/10 mix-blend-multiply blur-[100px] animate-blob -z-10 pointer-events-none" />
+      <div className="fixed right-0 bottom-0 h-96 w-96 rounded-full bg-pink-500/10 mix-blend-multiply blur-[100px] animate-blob animation-delay-2000 -z-10 pointer-events-none" />
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-text-primary">
@@ -491,13 +494,20 @@ function StatCard({
   iconClass: string
 }) {
   return (
-    <Card className="space-y-3">
-      <span className={`inline-flex rounded-full p-3 ${iconClass}`}>{icon}</span>
-      <div className="text-3xl font-bold text-text-primary">
-        <AnimatedCounter value={value} />
+    <Card className="group relative overflow-hidden p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50 border-white/60 bg-white/60 shadow-glass backdrop-blur-xl">
+      <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-gradient-to-br from-primary/15 to-transparent opacity-50 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-gradient-to-tr from-purple-500/10 to-transparent opacity-50 transition-opacity duration-300 group-hover:opacity-100" />
+      
+      <div className="relative z-10 space-y-4">
+        <span className={`inline-flex rounded-xl p-3 shadow-sm transition-transform duration-300 group-hover:scale-110 bg-gradient-to-br border border-white/50 ${iconClass}`}>{icon}</span>
+        <div className="text-4xl font-extrabold tracking-tight text-text-primary">
+          <AnimatedCounter value={value} />
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-text-secondary">{title}</h3>
+          <p className="text-xs font-medium text-text-muted mt-1">{subtext}</p>
+        </div>
       </div>
-      <h3 className="text-sm font-semibold text-text-secondary">{title}</h3>
-      <p className="text-xs text-text-muted">{subtext}</p>
     </Card>
   )
 }
@@ -518,7 +528,7 @@ function StatsSkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: 4 }).map((_, index) => (
-        <Skeleton key={index} className="h-36 w-full rounded-lg" />
+        <Skeleton key={index} className="h-40 w-full rounded-2xl" />
       ))}
     </div>
   )
@@ -549,13 +559,14 @@ function UploadCard({
 
   return (
     <Card
-      className={`rounded-xl border-2 border-dashed p-10 text-center transition-all ${
-        isDragOver ? "border-primary bg-primary-light" : "border-primary-border bg-white hover:bg-[#f8f8ff]"
+      className={`relative overflow-hidden rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-300 ${
+        isDragOver ? "border-primary bg-primary/5 scale-[1.02] shadow-primary" : "border-border-medium bg-white hover:border-primary/50 hover:bg-bg-surface hover:shadow-md"
       }`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 to-transparent opacity-0 transition-opacity duration-300 hover:opacity-100" />
       <input
         id={fileInputId}
         type="file"
@@ -563,32 +574,39 @@ function UploadCard({
         accept=".mp3,.mp4,.wav,.m4a,.ogg,.flac"
         onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
       />
-      {!uploadState ? (
-        <>
-          <UploadCloud className={`mx-auto h-12 w-12 ${isDragOver ? "scale-110 text-primary" : "text-primary"}`} />
-          <h3 className="mt-4 text-xl font-semibold text-text-primary">Upload a meeting recording</h3>
-          <p className="mt-2 text-text-secondary">Drop your audio or video file here</p>
-          <p className="mt-1 text-sm text-text-muted">MP3, MP4, WAV, M4A, OGG, FLAC</p>
-          <label htmlFor={fileInputId} className="mt-4 inline-block cursor-pointer text-sm font-semibold text-primary">
-            or click to browse
-          </label>
-        </>
-      ) : isProcessing ? (
-        <ProcessingTracker status={uploadState.status} progress={uploadState.progress} />
-      ) : (
-        <div className="space-y-4">
-          <p className="text-sm text-text-secondary">
-            <span className="font-semibold text-text-primary">{uploadState.file.name}</span> ·{" "}
-            {(uploadState.file.size / (1024 * 1024)).toFixed(2)} MB
-          </p>
-          <Button fullWidth onClick={onProcessUpload}>
-            Process with Trace →
-          </Button>
-          <button type="button" onClick={onReset} className="text-sm text-text-muted">
-            Remove file
-          </button>
-        </div>
-      )}
+      <div className="relative z-10">
+        {!uploadState ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center">
+            <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 transition-transform duration-300 ${isDragOver ? "scale-110" : "group-hover:scale-110"}`}>
+              <UploadCloud className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold text-text-primary">Upload a meeting recording</h3>
+            <p className="mt-2 text-text-secondary">Drop your audio or video file here</p>
+            <p className="mt-1 text-sm text-text-muted font-medium">MP3, MP4, WAV, M4A, OGG, FLAC</p>
+            <label htmlFor={fileInputId} className="mt-6 inline-flex cursor-pointer items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-primary shadow-sm ring-1 ring-inset ring-primary/20 hover:bg-primary/5 transition-all hover:scale-105 active:scale-95">
+              Browse files
+            </label>
+          </motion.div>
+        ) : isProcessing ? (
+          <ProcessingTracker status={uploadState.status} progress={uploadState.progress} />
+        ) : (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-5 mx-auto max-w-sm">
+            <div className="rounded-xl border border-border-light bg-white p-4 shadow-sm flex items-center justify-between">
+              <div className="text-left overflow-hidden">
+                <p className="truncate font-semibold text-text-primary">{uploadState.file.name}</p>
+                <p className="text-xs text-text-muted mt-0.5">{(uploadState.file.size / (1024 * 1024)).toFixed(2)} MB</p>
+              </div>
+              <button type="button" onClick={onReset} className="ml-4 rounded-full p-1.5 text-text-muted hover:bg-bg-surface hover:text-[var(--danger)] transition-colors">
+                ✕
+              </button>
+            </div>
+            <Button size="lg" fullWidth className="h-12 shadow-md hover:shadow-lg rounded-xl" onClick={onProcessUpload}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Process with Trace
+            </Button>
+          </motion.div>
+        )}
+      </div>
     </Card>
   )
 }
@@ -596,25 +614,30 @@ function UploadCard({
 function ProcessingTracker({ status, progress }: { status: UploadStatus; progress: number }) {
   if (status === "uploading") {
     return (
-      <div className="space-y-4 text-left">
-        <div className="flex items-start gap-3">
-          <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-primary border-t-transparent text-primary animate-spin" />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 text-left mx-auto max-w-md bg-white p-6 rounded-xl shadow-sm border border-border-light">
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+            <UploadCloud className="h-5 w-5 text-primary animate-pulse" />
+          </div>
           <div>
-            <p className="font-medium text-primary">Uploading file</p>
-            <p className="text-sm italic text-text-secondary">Sending your recording to Trace...</p>
+            <p className="font-bold text-text-primary text-lg">Uploading file</p>
+            <p className="text-sm font-medium text-text-secondary mt-1">Sending your recording to Trace...</p>
           </div>
         </div>
         <div className="mt-5">
-          <div className="h-2 w-full rounded-full bg-bg-elevated">
+          <div className="h-2.5 w-full rounded-full bg-bg-elevated overflow-hidden">
             <motion.div
-              className="h-2 rounded-full bg-primary"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-purple-500"
               animate={{ width: `${Math.min(progress, 100)}%` }}
               transition={{ duration: 0.35 }}
             />
           </div>
-          <p className="mt-2 text-sm text-text-secondary">{progress}% uploaded</p>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-sm font-bold text-primary">{progress}%</p>
+            <p className="text-xs font-medium text-text-muted">Please keep this window open</p>
+          </div>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
@@ -627,46 +650,49 @@ function ProcessingTracker({ status, progress }: { status: UploadStatus; progres
   ]
 
   return (
-    <div className="space-y-4 text-left">
-      {steps.map((step, index) => {
-        const completed = stepIndex > index || status === "completed"
-        const active = stepIndex === index && status !== "completed"
-        return (
-          <div key={step.title} className="flex items-start gap-3">
-            <span
-              className={`mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full border ${
-                completed
-                  ? "border-[var(--success)] bg-[var(--success)] text-white"
-                  : active
-                    ? "animate-spin border-primary border-t-transparent text-primary"
-                    : "border-border-medium text-text-muted"
-              }`}
-            >
-              {completed ? "✓" : ""}
-            </span>
-            <div>
-              <p
-                className={`font-medium ${
-                  completed ? "text-[var(--success)]" : active ? "text-primary" : "text-text-muted"
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 text-left mx-auto max-w-md bg-white p-6 rounded-xl shadow-sm border border-border-light relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-purple-500 to-pink-500 animate-pulse" />
+      <div className="space-y-5">
+        {steps.map((step, index) => {
+          const completed = stepIndex > index || status === "completed"
+          const active = stepIndex === index && status !== "completed"
+          return (
+            <div key={step.title} className={`flex items-start gap-4 transition-opacity duration-300 ${!completed && !active ? "opacity-40" : "opacity-100"}`}>
+              <span
+                className={`mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border-2 ${
+                  completed
+                    ? "border-[var(--success)] bg-[var(--success)] text-white shadow-sm"
+                    : active
+                      ? "animate-spin border-primary border-t-transparent text-primary"
+                      : "border-border-medium text-text-muted bg-bg-surface"
                 }`}
               >
-                {step.title}
-              </p>
-              {active ? <p className="text-sm italic text-text-secondary">{step.description}</p> : null}
+                {completed ? "✓" : ""}
+              </span>
+              <div>
+                <p
+                  className={`font-bold ${
+                    completed ? "text-text-primary" : active ? "text-primary" : "text-text-muted"
+                  }`}
+                >
+                  {step.title}
+                </p>
+                {active ? <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-medium text-text-secondary mt-1">{step.description}</motion.p> : null}
+              </div>
             </div>
-          </div>
-        )
-      })}
-      <div className="mt-5">
-        <div className="h-2 w-full rounded-full bg-bg-elevated">
+          )
+        })}
+      </div>
+      <div className="mt-6 pt-6 border-t border-border-light">
+        <div className="h-2 w-full rounded-full bg-bg-elevated overflow-hidden">
           <motion.div
-            className="h-2 rounded-full bg-primary"
+            className="h-full rounded-full bg-gradient-to-r from-primary to-purple-500"
             animate={{ width: `${Math.min(progress, 100)}%` }}
             transition={{ duration: 0.35 }}
           />
         </div>
-        <p className="mt-2 text-sm text-text-secondary">{progress}% complete</p>
+        <p className="mt-2 text-right text-sm font-bold text-primary">{progress}% complete</p>
       </div>
-    </div>
+    </motion.div>
   )
 }

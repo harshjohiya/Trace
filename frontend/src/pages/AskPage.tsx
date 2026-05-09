@@ -153,50 +153,76 @@ export function AskPage() {
         <div className="flex-1 space-y-6 overflow-y-auto p-6 pb-32">
           {error ? <ErrorState message={error} /> : null}
           {exchanges.length === 0 ? (
-            <div className="flex min-h-[500px] flex-col items-center justify-center text-center">
-              <Sparkles className="h-20 w-20 animate-pulse text-primary" />
-              <h2 className="mt-5 text-3xl font-bold tracking-tight text-text-primary">
-                Ask anything about your meetings
-              </h2>
-              <p className="mt-3 max-w-xl text-text-secondary">
-                Trace searches across everything you&apos;ve uploaded and answers in plain English.
-              </p>
-              <div className="mt-8 grid w-full max-w-2xl gap-3 sm:grid-cols-2">
-                {emptyExamples.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => {
-                      setQuestion(item)
-                      void runQuery(item)
-                    }}
-                    className="rounded-md border border-border-light p-4 text-left text-sm text-text-secondary transition-colors hover:border-primary hover:bg-[#f8f8ff] hover:text-primary"
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
+            <div className="flex min-h-[500px] flex-col items-center justify-center text-center relative overflow-hidden rounded-2xl bg-gradient-to-b from-white to-bg-surface border border-border-light">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 to-transparent opacity-50" />
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }} className="relative z-10 flex flex-col items-center">
+                <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/10 shadow-glass mb-6">
+                  <div className="absolute inset-0 rounded-3xl border border-primary/20 bg-white/40 backdrop-blur-sm" />
+                  <Sparkles className="relative z-10 h-10 w-10 text-primary animate-pulse" />
+                </div>
+                <h2 className="text-4xl font-extrabold tracking-tight text-text-primary bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary">
+                  Ask anything about your meetings
+                </h2>
+                <p className="mt-4 max-w-xl text-lg text-text-secondary font-medium">
+                  Trace searches across everything you&apos;ve uploaded and answers in plain English.
+                </p>
+                <div className="mt-10 grid w-full max-w-3xl gap-4 sm:grid-cols-2">
+                  {emptyExamples.map((item, index) => (
+                    <motion.button
+                      key={item}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 + 0.2 }}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      type="button"
+                      onClick={() => {
+                        setQuestion(item)
+                        void runQuery(item)
+                      }}
+                      className="group flex items-center justify-between rounded-xl border border-border-light bg-white p-5 text-left text-sm font-semibold text-text-secondary shadow-sm transition-all hover:border-primary/50 hover:shadow-md"
+                    >
+                      <span>{item}</span>
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/5 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Send className="h-3 w-3 text-primary" />
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
             </div>
           ) : (
             exchanges.map((exchange) => (
-              <div key={exchange.id} className="space-y-3">
-                <div className="ml-auto max-w-[70%] rounded-[16px_16px_4px_16px] border border-primary-border bg-primary-light px-4 py-3 text-sm text-text-secondary">
+              <motion.div 
+                key={exchange.id} 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                <div className="ml-auto max-w-[75%] rounded-[20px_20px_4px_20px] bg-primary px-5 py-3.5 text-[15px] font-medium text-white shadow-sm">
                   {exchange.question}
                 </div>
-                <div className="rounded-lg border border-border-light bg-white p-6 shadow-sm">
+                <div className="max-w-[90%] rounded-[4px_20px_20px_20px] border border-border-light bg-white p-6 shadow-sm ring-1 ring-black/5 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-purple-500" />
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-text-primary">Trace</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="font-bold text-text-primary">Trace AI</span>
                     </div>
                     {exchange.answer ? (
-                      <Badge variant={confidenceToBadge(exchange.answer.confidence)}>
+                      <Badge variant={confidenceToBadge(exchange.answer.confidence)} className="shadow-sm">
                         {confidenceToLabel(exchange.answer.confidence)}
                       </Badge>
                     ) : exchange.structured ? (
-                      <Badge variant="gray">Filtered results</Badge>
+                      <Badge variant="gray" className="shadow-sm">Filtered results</Badge>
                     ) : (
-                      <Badge variant="indigo">Searching...</Badge>
+                      <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse animation-delay-200" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse animation-delay-400" />
+                      </div>
                     )}
                   </div>
 
@@ -257,7 +283,7 @@ export function AskPage() {
                     </div>
                   ) : null}
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
 
@@ -373,26 +399,40 @@ function StructuredResultCard({
 }) {
   if (filterType === "action_item") {
     return (
-      <div className="rounded-md border-l-4 border-l-[var(--success)] bg-[var(--success-light)] p-4">
-        <p className="font-medium text-text-primary">{result.task}</p>
-        <p className="mt-1 text-sm text-text-secondary">
-          {result.owner} · {result.deadline ?? "No deadline"}
-        </p>
+      <div className="group relative overflow-hidden rounded-xl border border-[var(--success-border)] bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+        <div className="absolute left-0 top-0 h-full w-1.5 bg-[var(--success)]" />
+        <div className="pl-2">
+          <p className="font-bold text-text-primary text-[15px]">{result.task}</p>
+          <div className="mt-2.5 flex items-center gap-3 text-xs font-medium text-text-secondary">
+            <span className="flex items-center gap-1.5 rounded-full bg-bg-surface px-2.5 py-1"><span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />{result.owner}</span>
+            <span className="text-text-muted">{result.deadline ?? "No deadline"}</span>
+          </div>
+        </div>
       </div>
     )
   }
   if (filterType === "decision") {
     return (
-      <div className="rounded-md border-l-4 border-l-[var(--info)] bg-[var(--info-light)] p-4">
-        <p className="font-medium text-text-primary">{result.decision}</p>
-        <p className="mt-1 text-sm text-text-secondary">{result.made_by}</p>
+      <div className="group relative overflow-hidden rounded-xl border border-[var(--info-border)] bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+        <div className="absolute left-0 top-0 h-full w-1.5 bg-[var(--info)]" />
+        <div className="pl-2">
+          <p className="font-bold text-text-primary text-[15px]">{result.decision}</p>
+          <div className="mt-2.5 flex items-center gap-3 text-xs font-medium text-text-secondary">
+            <span className="flex items-center gap-1.5 rounded-full bg-bg-surface px-2.5 py-1"><span className="h-1.5 w-1.5 rounded-full bg-[var(--info)]" />{result.made_by}</span>
+          </div>
+        </div>
       </div>
     )
   }
   return (
-    <div className="rounded-md border-l-4 border-l-[var(--danger)] bg-[var(--danger-light)] p-4">
-      <p className="font-medium text-text-primary">{result.blocker}</p>
-      <p className="mt-1 text-sm text-text-secondary">Affects: {result.affects}</p>
+    <div className="group relative overflow-hidden rounded-xl border border-[var(--danger-border)] bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+      <div className="absolute left-0 top-0 h-full w-1.5 bg-[var(--danger)]" />
+      <div className="pl-2">
+        <p className="font-bold text-text-primary text-[15px]">{result.blocker}</p>
+        <div className="mt-2.5 flex items-center gap-3 text-xs font-medium text-text-secondary">
+          <span className="flex items-center gap-1.5 rounded-full bg-[var(--danger-light)] px-2.5 py-1 text-[#7f1d1d]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--danger)]" />Affects: {result.affects}</span>
+        </div>
+      </div>
     </div>
   )
 }
