@@ -48,15 +48,33 @@ export default {
         xl: "0 20px 60px rgba(0,0,0,0.12)",
         primary: "0 4px 20px rgba(99,102,241,0.25)",
         hero: "0 40px 80px rgba(99,102,241,0.15)",
+        glass: "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
       },
       keyframes: {
         shimmer: {
           "0%": { backgroundPosition: "200% 0" },
           "100%": { backgroundPosition: "-200% 0" },
         },
+        "infinite-scroll": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-100%)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        blob: {
+          "0%": { transform: "translate(0px, 0px) scale(1)" },
+          "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+          "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+          "100%": { transform: "translate(0px, 0px) scale(1)" },
+        },
       },
       animation: {
         shimmer: "shimmer 1.5s infinite",
+        "infinite-scroll": "infinite-scroll 25s linear infinite",
+        float: "float 3s ease-in-out infinite",
+        blob: "blob 7s infinite",
       },
     },
   },

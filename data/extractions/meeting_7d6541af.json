@@ -1,0 +1,51 @@
+{
+  "meeting_id": "meeting_7d6541af",
+  "created_at": "2026-05-07T18:42:51.287281",
+  "title": "Composer Community Contribution Meeting",
+  "meeting_type": "planning",
+  "duration_sec": 741.68,
+  "speakers": [
+    "Participant_1"
+  ],
+  "action_items": [
+    {
+      "task": "flag that for everyone go take a look at that tool",
+      "owner": "John",
+      "deadline": null,
+      "mentioned_by": "Dan"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "remove the weekend element of on call",
+      "made_by": "Nico"
+    },
+    {
+      "decision": "move forward with community contribution for Composer",
+      "made_by": "Axel"
+    }
+  ],
+  "blockers": [
+    {
+      "blocker": "waiting on darby or myself I can reach out to darby for people if I need to",
+      "affects": "John"
+    },
+    {
+      "blocker": "missing document",
+      "affects": "Dan"
+    }
+  ],
+  "key_topics": [
+    "async meetings",
+    "infrared dev escalation process",
+    "back end weekly call",
+    "front end weekly call"
+  ],
+  "summary": "The meeting discussed removing the weekend element of on call and moving forward with community contribution for Composer. Action items were assigned to John, and blockers included waiting on darby or the speaker's own action.",
+  "metadata": {
+    "extraction_time_sec": 492.7,
+    "chunks_processed": 1,
+    "model_used": "llama3.2:3b",
+    "segment_count": 1
+  }
+}
