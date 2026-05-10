@@ -68,6 +68,7 @@ app.add_middleware(
 print("[API] Loading models...")
 audio_processor = AudioProcessor()
 transcriber     = Transcriber()
+transcriber.load_models()
 extractor       = MeetingExtractor()
 vector_store    = VectorStore()
 query_engine    = MeetingQueryEngine(vector_store=vector_store)
@@ -272,16 +273,22 @@ def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
         })
 
     try:
+        pipeline_started = datetime.now()
+
         # Step 1: Convert audio
         update_job("converting", 10)
         print(f"[Pipeline] {job_id} — converting audio: {audio_path}")
+        convert_start = datetime.now()
         wav_path = audio_processor.convert_to_wav(audio_path)
         print(f"[Pipeline] {job_id} — converted to: {wav_path}")
+        print(f"[Pipeline] {job_id} — convert took {(datetime.now() - convert_start).total_seconds():.1f}s")
 
         # Step 2: Transcribe + diarize
         update_job("transcribing", 25)
         print(f"[Pipeline] {job_id} — transcribing...")
+        transcribe_start = datetime.now()
         transcript = transcriber.transcribe(wav_path, meeting_id=meeting_id)
+        print(f"[Pipeline] {job_id} — transcribe took {(datetime.now() - transcribe_start).total_seconds():.1f}s")
 
         # Save transcript
         transcript_path = Path(config.TRANSCRIPT_DIR) / f"{meeting_id}.json"
@@ -293,20 +300,27 @@ def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
         # Step 3: Extract structured data
         update_job("extracting", 60)
         print(f"[Pipeline] {job_id} — extracting...")
+        extract_start = datetime.now()
         extraction = extractor.extract(transcript)
         extractor.save(extraction)
         print(f"[Pipeline] {job_id} — extraction saved")
+        print(f"[Pipeline] {job_id} — extraction took {(datetime.now() - extract_start).total_seconds():.1f}s")
 
         # Step 4: Index in vector DB
         update_job("indexing", 85)
         print(f"[Pipeline] {job_id} — indexing...")
+        index_start = datetime.now()
         vector_store.index_transcript(transcript)
         vector_store.index_extraction(extraction)
         print(f"[Pipeline] {job_id} — indexed")
+        print(f"[Pipeline] {job_id} — indexing took {(datetime.now() - index_start).total_seconds():.1f}s")
 
         # Done
         update_job("completed", 100)
         jobs[job_id]["completed_at"] = datetime.now().isoformat()
+        jobs[job_id]["processing_time_sec"] = round(
+            (datetime.now() - pipeline_started).total_seconds(), 1
+        )
         print(f"[Pipeline] {job_id} — COMPLETE")
 
     except Exception as e:

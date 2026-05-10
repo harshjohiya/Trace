@@ -2,6 +2,7 @@ import json
 import re
 import time
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from groq import Groq
 from pathlib import Path
 import sys
@@ -409,10 +410,16 @@ Return ONLY the summary text, no JSON, no labels."""
         chunks = self._chunk_transcript(transcript)
 
         # Step 2: Extract from each chunk
-        chunk_results = []
-        for i, chunk in enumerate(chunks):
-            result = self._extract_from_chunk(chunk, i)
-            chunk_results.append(result)
+        chunk_results = [None] * len(chunks)
+        max_workers = min(4, len(chunks)) or 1
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {
+                executor.submit(self._extract_from_chunk, chunk, i): i
+                for i, chunk in enumerate(chunks)
+            }
+            for future in as_completed(futures):
+                idx = futures[future]
+                chunk_results[idx] = future.result()
 
         # Step 3: Aggregate
         final = self._aggregate_chunks(chunk_results)

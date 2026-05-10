@@ -4,6 +4,7 @@ import gc
 import os
 import urllib.request
 import numpy as np
+import time
 from pathlib import Path
 from datetime import datetime
 import sys
@@ -17,6 +18,8 @@ class Transcriber:
         self.device = config.DEVICE
         self.model = None
         self.diarize_model = None
+        self._diarization_attempted = False
+        self._align_cache = {}
         # When True we use whisperx APIs (alignment + helpers).
         # When False we fall back to faster_whisper (no alignment).
         self._whisperx_mode = True
@@ -104,7 +107,9 @@ class Transcriber:
 
     def load_models(self):
         """Load Whisper + pyannote. Safe to call multiple times."""
-        if self.model is not None and self.diarize_model is not None:
+        if self.model is not None and (
+            self.diarize_model is not None or self._diarization_attempted
+        ):
             return
 
         device, compute_type, batch_size, model_name = self._get_compute_config()
@@ -114,8 +119,12 @@ class Transcriber:
         if self.model is None:
             self._load_whisper(model_name, device, compute_type)
 
-        if self.diarize_model is None:
+        if self.diarize_model is None and not self._diarization_attempted:
             self._load_diarization()
+
+        if self._whisperx_mode and self.device == "cpu":
+            # Preload alignment model once to remove per-request startup overhead.
+            self._get_align_resources("en")
 
     def _load_whisper(self, model_name, device, compute_type):
         # WhisperX imports can pull in heavy deps (pyannote, torchmetrics,
@@ -180,6 +189,7 @@ class Transcriber:
         Load pyannote speaker diarization pipeline directly.
         Skips whisperx's broken wrapper entirely.
         """
+        self._diarization_attempted = True
         try:
             from pyannote.audio import Pipeline
         except Exception as e:
@@ -225,6 +235,27 @@ class Transcriber:
                 ) from e
             print(f"[Transcriber] Diarization loading failed: {e}\nContinuing without diarization.")
             self.diarize_model = None
+
+    def _get_align_resources(self, language_code: str):
+        """Load/cached WhisperX align model per language code."""
+        # On CUDA, keep align model ephemeral to avoid VRAM pressure/OOM.
+        if self.device == "cuda":
+            import whisperx
+            return whisperx.load_align_model(
+                language_code=language_code,
+                device=self.device
+            )
+
+        if language_code in self._align_cache:
+            return self._align_cache[language_code]
+
+        import whisperx
+        align_model, metadata = whisperx.load_align_model(
+            language_code=language_code,
+            device=self.device
+        )
+        self._align_cache[language_code] = (align_model, metadata)
+        return align_model, metadata
 
     # ──────────────────────────────────────────────────────────
     # SPEAKER COUNT ESTIMATION
@@ -304,6 +335,7 @@ class Transcriber:
 
         audio_path = str(audio_path)
         meeting_id = meeting_id or Path(audio_path).stem
+        stage_start = time.time()
 
         print(f"\n[Transcriber] Starting pipeline for: {audio_path}")
 
@@ -326,29 +358,30 @@ class Transcriber:
                 # faster_whisper segments have start, end, text attributes
                 segs.append({"start": float(s.start), "end": float(s.end), "text": s.text})
             result = {"language": getattr(info, "language", "en"), "segments": segs}
+        print(f"[Transcriber] ASR completed in {time.time() - stage_start:.1f}s")
 
         print(f"[Transcriber] Got {len(result['segments'])} raw segments")
 
         # ── Step 2: Align timestamps (whisperx only) ─────────
         if self._whisperx_mode:
+            align_start = time.time()
             print("[Transcriber] Step 2/3: Aligning timestamps...")
-            align_model, metadata = whisperx.load_align_model(
-                language_code=result["language"],
-                device=self.device
-            )
+            align_model, metadata = self._get_align_resources(result["language"])
             result = whisperx.align(
                 result["segments"], align_model,
                 metadata, audio, self.device,
                 return_char_alignments=False
             )
-            del align_model
-            gc.collect()
-            if torch.cuda.is_available():
+            if self.device == "cuda":
+                del align_model
+                gc.collect()
                 torch.cuda.empty_cache()
+            print(f"[Transcriber] Alignment completed in {time.time() - align_start:.1f}s")
         else:
             print("[Transcriber] Skipping alignment (not available without whisperx)")
 
         # ── Step 3: Diarize ──────────────────────────────────
+        diarize_start = time.time()
         print("[Transcriber] Step 3/3: Identifying speakers...")
         if self.diarize_model is None:
             print("[Transcriber] Diarization disabled — assigning single speaker to all segments")
@@ -374,20 +407,24 @@ class Transcriber:
 
             diarize_df = self._pyannote_to_df(diarization)
             result     = self._assign_speakers(result, diarize_df)
+        print(f"[Transcriber] Diarization completed in {time.time() - diarize_start:.1f}s")
 
         # ── Step 4: Build transcript ─────────────────────────
         transcript = self._build_transcript(result, meeting_id)
 
         # ── Step 5: Auto-identify names ──────────────────────
+        identify_start = time.time()
         identifier = SpeakerIdentifier()
         name_map   = identifier.identify(transcript)
 
         print(f"[Transcriber] Auto-identified names: {name_map}")
         transcript = self.rename_speakers(transcript, name_map)
+        print(f"[Transcriber] Speaker identification completed in {time.time() - identify_start:.1f}s")
 
         # ── Step 6: Save ─────────────────────────────────────
         output_path = self._save_transcript(transcript, meeting_id)
         print(f"[Transcriber] Saved -> {output_path}")
+        print(f"[Transcriber] Total transcribe pipeline: {time.time() - stage_start:.1f}s")
 
         return transcript
 
