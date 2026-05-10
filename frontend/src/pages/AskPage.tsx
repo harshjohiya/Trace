@@ -114,12 +114,12 @@ export function AskPage() {
   }
 
   return (
-    <PageShell className="grid min-h-[calc(100vh-120px)] gap-4 md:grid-cols-[260px_1fr] relative pb-0">
+    <PageShell className="grid h-full gap-4 md:grid-cols-[260px_1fr] relative overflow-hidden">
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-purple-500/5 to-transparent -z-10 pointer-events-none" />
       <div className="fixed -left-40 top-40 h-96 w-96 rounded-full bg-primary/10 mix-blend-multiply blur-[100px] animate-blob -z-10 pointer-events-none" />
       
-      <aside className="hidden md:flex flex-col rounded-2xl border border-border-light/50 bg-white/50 backdrop-blur-xl shadow-sm p-4">
-        <div className="flex-1 overflow-auto">
+      <aside className="hidden md:flex flex-col rounded-2xl border border-border-light/50 bg-white/50 backdrop-blur-xl shadow-sm p-4 overflow-hidden">
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white [&::-webkit-scrollbar-track]:bg-transparent">
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-3 px-2">Recent</h2>
           <div className="space-y-0.5">
             {history.length === 0 ? (
@@ -157,10 +157,10 @@ export function AskPage() {
         </div>
       </aside>
 
-      <section className="relative flex flex-col rounded-2xl border border-border-light/50 bg-white/60 backdrop-blur-xl shadow-sm overflow-hidden h-[calc(100vh-120px)]">
+      <section className="relative flex flex-col rounded-2xl border border-border-light/50 bg-white/60 backdrop-blur-xl shadow-sm overflow-hidden h-full">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
         
-        <div className="flex-1 space-y-8 overflow-y-auto p-4 md:p-8 pb-40 scroll-smooth flex flex-col">
+        <div className="flex-1 space-y-8 overflow-y-auto p-4 md:p-8 pb-40 scroll-smooth flex flex-col [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white [&::-webkit-scrollbar-thumb]:border [&::-webkit-scrollbar-thumb]:border-border-light/50 [&::-webkit-scrollbar-track]:bg-transparent">
           {error ? <ErrorState message={error} /> : null}
           
           {exchanges.length === 0 ? (
@@ -325,6 +325,8 @@ export function AskPage() {
               </div>
             </div>
           ) : null}
+          
+          <div className="h-32 md:h-40 flex-shrink-0 w-full" />
         </div>
 
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-10 pb-6 px-4 md:px-6 z-10 pointer-events-none">

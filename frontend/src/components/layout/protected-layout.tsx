@@ -13,10 +13,14 @@ export function ProtectedLayout() {
     return <Navigate to="/signin" replace />
   }
 
+  const isAskPage = location.pathname === "/ask"
+
   return (
-    <div className="min-h-screen bg-bg-surface pb-24">
-      <AppNavbar user={user} />
-      <main className="page-enter py-6 sm:py-8">
+    <div className={`bg-bg-surface ${isAskPage ? "h-screen flex flex-col overflow-hidden" : "min-h-screen pb-24"}`}>
+      <div className="flex-shrink-0 z-50">
+        <AppNavbar user={user} />
+      </div>
+      <main className={`page-enter flex-1 relative ${isAskPage ? "overflow-hidden p-4 sm:px-8 sm:pb-8 pt-4" : "py-6 sm:py-8"}`}>
         <Outlet />
       </main>
     </div>
