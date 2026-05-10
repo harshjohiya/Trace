@@ -48,8 +48,14 @@ class MeetingExtractor:
             )
             print(f"[Extractor] Groq ready. Model: {self.model} [ok]")
         except Exception as e:
+            error_text = str(e)
+            if "model_decommissioned" in error_text:
+                raise RuntimeError(
+                    f"Groq model '{self.model}' is decommissioned. "
+                    "Set GROQ_MODEL=llama-3.3-70b-versatile in your .env."
+                ) from e
             raise RuntimeError(
-                f"Groq API verification failed for model '{self.model}': {e}"
+                f"Groq API verification failed for model '{self.model}': {error_text}"
             ) from e
 
     # ──────────────────────────────────────────────────────

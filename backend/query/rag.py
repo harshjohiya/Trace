@@ -83,7 +83,13 @@ class MeetingQueryEngine:
             )
             return (response.choices[0].message.content or "").strip()
         except Exception as e:
-            raise RuntimeError(f"RAG LLM call failed via Groq: {e}") from e
+            error_text = str(e)
+            if "model_decommissioned" in error_text:
+                raise RuntimeError(
+                    f"Groq model '{self.model}' is decommissioned. "
+                    "Set GROQ_MODEL=llama-3.3-70b-versatile in your .env."
+                ) from e
+            raise RuntimeError(f"RAG LLM call failed via Groq: {error_text}") from e
 
     def ask(self, question: str) -> dict:
         """
