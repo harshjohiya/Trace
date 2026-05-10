@@ -1,5 +1,5 @@
 import json
-import ollama
+from groq import Groq
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -20,8 +20,10 @@ class MeetingQueryEngine:
 
     def __init__(self, vector_store: VectorStore = None):
         self.vs     = vector_store or VectorStore()
-        self.client = ollama.Client(host=config.OLLAMA_BASE_URL)
-        self.model  = config.OLLAMA_MODEL
+        if not config.GROQ_API_KEY:
+            raise RuntimeError("GROQ_API_KEY is missing. Set it in your environment.")
+        self.client = Groq(api_key=config.GROQ_API_KEY)
+        self.model  = config.GROQ_MODEL
         print(f"[QueryEngine] Ready. Model: {self.model}")
 
     def _build_context(self, query: str) -> tuple[str, list]:
@@ -69,31 +71,19 @@ class MeetingQueryEngine:
 
     def _call_llm(self, system: str, user: str) -> str:
         """Call Llama 3.2 and return response text."""
-        response = self.client.chat(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user",   "content": user}
-            ],
-            options={
-                "temperature": 0.1,
-                "num_predict": 512,
-                "num_ctx":     4096,
-            }
-        )
-        # Ollama response may be dict-style or object-style depending
-        # on client/server version.
-        if isinstance(response, dict):
-            message = response.get("message", {})
-            if isinstance(message, dict):
-                return message.get("content", "").strip()
-            return ""
-
-        message = getattr(response, "message", None)
-        if message is not None:
-            return getattr(message, "content", "").strip()
-
-        return ""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user}
+                ],
+                temperature=0.1,
+                max_tokens=512,
+            )
+            return (response.choices[0].message.content or "").strip()
+        except Exception as e:
+            raise RuntimeError(f"RAG LLM call failed via Groq: {e}") from e
 
     def ask(self, question: str) -> dict:
         """

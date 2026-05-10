@@ -1,35 +1,35 @@
 {
   "meeting_id": "test_meeting_001",
-  "created_at": "2026-04-14T12:07:22.027983",
+  "created_at": "2026-05-10T18:43:02.900147",
   "total_duration": 257.78,
   "speaker_count": 3,
   "segments": [
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "Good morning, everyone. How are you all doing? Great. Thanks.",
       "start": 8.32,
       "end": 11.8
     },
     {
-      "speaker": "Participant_2",
+      "speaker": "Participant_1",
       "text": "I'm all good.",
       "start": 12.86,
       "end": 13.72
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "Thank you all for joining. If you haven't met yet, we have our two newly hired customer care team members, Ken and Maria. Hi, guys. Welcome to the team.",
       "start": 15.0,
       "end": 23.65
     },
     {
-      "speaker": "Participant_2",
+      "speaker": "Participant_1",
       "text": "Thanks, Angela. It's great to be here.",
       "start": 24.77,
       "end": 26.17
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "Hi, everyone. And Tarek from Human Resources is joining us for a brief period of time. Hi, Tarek.",
       "start": 26.91,
       "end": 33.65
@@ -41,19 +41,19 @@
       "end": 35.27
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "I scheduled this meeting to introduce our new team members to our training process. Tarek requested to be part of this meeting because he has some information for you as well. Tarek, would you like to begin?",
       "start": 36.98,
       "end": 47.23
     },
     {
       "speaker": "Tarek",
-      "text": "Sure. Thank you, Angela. So, Maria, Ken, welcome to log 18. I want to talk to you about some forms that you need to fill out before you can begin work. You have received an email last week with our liability policy and our confidentiality agreement. The one about you agreeing not to share any confidential information about our company with any third parties. Have you received it?",
+      "text": "Sure. Thank you, Angela. So Maria, Ken, welcome to log 18. I want to talk to you about some forms that you need to fill out before you can begin work. You have received an email last week with our liability policy. and our confidentiality agreement. The one about you agreeing not to share any confidential information about our company with any third parties. Have you received it?",
       "start": 48.27,
       "end": 75.34
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "Yes, I have.",
       "start": 76.12,
       "end": 76.92
@@ -65,7 +65,7 @@
       "end": 128.69
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "No, I'll send it to you this afternoon.",
       "start": 129.77,
       "end": 131.61
@@ -77,7 +77,7 @@
       "end": 152.29
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "Thanks, Tarik, speak to you soon. Thanks.",
       "start": 153.63,
       "end": 156.03
@@ -89,52 +89,52 @@
       "end": 156.99
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "Great, so let's get back to our business. Maria and Ken, you were both hired for the customer care positions. This means that you'll deal with our clients, team leads, and other companies who have purchased our software. You will answer some of their questions or provide a short demo of how our software and its features work. First, let me tell you a little bit about our product and our company. Then we'll go through your duties and responsibilities. And finally, you can ask me questions if you have any.",
       "start": 158.44,
       "end": 185.8
     },
     {
-      "speaker": "Participant_2",
+      "speaker": "Participant_1",
       "text": "Sounds good.",
       "start": 185.82,
       "end": 187.62
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "So the two owners, Jen and Nina created our company three years ago. They created software for training work teams called Logiteam. It became an instant success, and now we have 43 employees, 82 customers, and five different product packages. Our product is simple to use with some training, and that's where you come into the picture. In the next two weeks, you'll become experts of Logiteam. We'll make sure that you're familiar with all basic functions, security features, add-ons, and the most common glitches too. By the end of this training, you'll be able to assist our clients with using the software to its full potential. Do you guys have any questions so far?",
       "start": 189.4,
       "end": 229.8
     },
     {
-      "speaker": "Participant_2",
+      "speaker": "Participant_1",
       "text": "Yes, I have a question. Do we use our own devices or the company's laptop during the training?",
       "start": 230.9,
       "end": 235.66
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "Great question. You don't need your own device. We will set up your account on the computer you'll be using for work. So it's better to start working on that.",
       "start": 236.45,
       "end": 244.3
     },
     {
-      "speaker": "Participant_2",
+      "speaker": "Participant_1",
       "text": "Great. Thanks.",
       "start": 245.28,
       "end": 245.8
     },
     {
-      "speaker": "Participant_1",
+      "speaker": "Participant_2",
       "text": "I have a question. Will I be interacting with clients over the phone or video conference? We use a video conferencing tool that will be covered during your training. Okay. Thank you.",
       "start": 247.26,
       "end": 257.78
     }
   ],
-  "full_text": "[Participant_1]: Good morning, everyone. How are you all doing? Great. Thanks.\n[Participant_2]: I'm all good.\n[Participant_1]: Thank you all for joining. If you haven't met yet, we have our two newly hired customer care team members, Ken and Maria. Hi, guys. Welcome to the team.\n[Participant_2]: Thanks, Angela. It's great to be here.\n[Participant_1]: Hi, everyone. And Tarek from Human Resources is joining us for a brief period of time. Hi, Tarek.\n[Tarek]: Morning, everyone.\n[Participant_1]: I scheduled this meeting to introduce our new team members to our training process. Tarek requested to be part of this meeting because he has some information for you as well. Tarek, would you like to begin?\n[Tarek]: Sure. Thank you, Angela. So, Maria, Ken, welcome to log 18. I want to talk to you about some forms that you need to fill out before you can begin work. You have received an email last week with our liability policy and our confidentiality agreement. The one about you agreeing not to share any confidential information about our company with any third parties. Have you received it?\n[Participant_1]: Yes, I have.\n[Tarek]: I don't think I received it. I'm sorry. No problem. I will send it to you today. Once you have the document, please read it carefully and sign electronically. There are four places where you will need to insert your initials, and two, where we need your signature. Once signed and saved, please send a document directly to me. My email address is tarot.goldas at mail.ca. That is T-A-R-E-K dot G-U-L-D-U-Z at mail.ca. This is very important because you cannot work until I have the signed document on file. Do you have any questions?\n[Participant_1]: No, I'll send it to you this afternoon.\n[Tarek]: Perfect, thank you. Ken, please send me an email so I can double check the email address I have in your file. Absolutely, thanks. Okay, that's it. Thank you, Angela, for giving me the time. I will leave the meeting now. Have a good day, everyone. Maria, Ken, good luck with your training.\n[Participant_1]: Thanks, Tarik, speak to you soon. Thanks.\n[Tarek]: Thanks, bye.\n[Participant_1]: Great, so let's get back to our business. Maria and Ken, you were both hired for the customer care positions. This means that you'll deal with our clients, team leads, and other companies who have purchased our software. You will answer some of their questions or provide a short demo of how our software and its features work. First, let me tell you a little bit about our product and our company. Then we'll go through your duties and responsibilities. And finally, you can ask me questions if you have any.\n[Participant_2]: Sounds good.\n[Participant_1]: So the two owners, Jen and Nina created our company three years ago. They created software for training work teams called Logiteam. It became an instant success, and now we have 43 employees, 82 customers, and five different product packages. Our product is simple to use with some training, and that's where you come into the picture. In the next two weeks, you'll become experts of Logiteam. We'll make sure that you're familiar with all basic functions, security features, add-ons, and the most common glitches too. By the end of this training, you'll be able to assist our clients with using the software to its full potential. Do you guys have any questions so far?\n[Participant_2]: Yes, I have a question. Do we use our own devices or the company's laptop during the training?\n[Participant_1]: Great question. You don't need your own device. We will set up your account on the computer you'll be using for work. So it's better to start working on that.\n[Participant_2]: Great. Thanks.\n[Participant_1]: I have a question. Will I be interacting with clients over the phone or video conference? We use a video conferencing tool that will be covered during your training. Okay. Thank you.",
+  "full_text": "[Participant_2]: Good morning, everyone. How are you all doing? Great. Thanks.\n[Participant_1]: I'm all good.\n[Participant_2]: Thank you all for joining. If you haven't met yet, we have our two newly hired customer care team members, Ken and Maria. Hi, guys. Welcome to the team.\n[Participant_1]: Thanks, Angela. It's great to be here.\n[Participant_2]: Hi, everyone. And Tarek from Human Resources is joining us for a brief period of time. Hi, Tarek.\n[Tarek]: Morning, everyone.\n[Participant_2]: I scheduled this meeting to introduce our new team members to our training process. Tarek requested to be part of this meeting because he has some information for you as well. Tarek, would you like to begin?\n[Tarek]: Sure. Thank you, Angela. So Maria, Ken, welcome to log 18. I want to talk to you about some forms that you need to fill out before you can begin work. You have received an email last week with our liability policy. and our confidentiality agreement. The one about you agreeing not to share any confidential information about our company with any third parties. Have you received it?\n[Participant_2]: Yes, I have.\n[Tarek]: I don't think I received it. I'm sorry. No problem. I will send it to you today. Once you have the document, please read it carefully and sign electronically. There are four places where you will need to insert your initials, and two, where we need your signature. Once signed and saved, please send a document directly to me. My email address is tarot.goldas at mail.ca. That is T-A-R-E-K dot G-U-L-D-U-Z at mail.ca. This is very important because you cannot work until I have the signed document on file. Do you have any questions?\n[Participant_2]: No, I'll send it to you this afternoon.\n[Tarek]: Perfect, thank you. Ken, please send me an email so I can double check the email address I have in your file. Absolutely, thanks. Okay, that's it. Thank you, Angela, for giving me the time. I will leave the meeting now. Have a good day, everyone. Maria, Ken, good luck with your training.\n[Participant_2]: Thanks, Tarik, speak to you soon. Thanks.\n[Tarek]: Thanks, bye.\n[Participant_2]: Great, so let's get back to our business. Maria and Ken, you were both hired for the customer care positions. This means that you'll deal with our clients, team leads, and other companies who have purchased our software. You will answer some of their questions or provide a short demo of how our software and its features work. First, let me tell you a little bit about our product and our company. Then we'll go through your duties and responsibilities. And finally, you can ask me questions if you have any.\n[Participant_1]: Sounds good.\n[Participant_2]: So the two owners, Jen and Nina created our company three years ago. They created software for training work teams called Logiteam. It became an instant success, and now we have 43 employees, 82 customers, and five different product packages. Our product is simple to use with some training, and that's where you come into the picture. In the next two weeks, you'll become experts of Logiteam. We'll make sure that you're familiar with all basic functions, security features, add-ons, and the most common glitches too. By the end of this training, you'll be able to assist our clients with using the software to its full potential. Do you guys have any questions so far?\n[Participant_1]: Yes, I have a question. Do we use our own devices or the company's laptop during the training?\n[Participant_2]: Great question. You don't need your own device. We will set up your account on the computer you'll be using for work. So it's better to start working on that.\n[Participant_1]: Great. Thanks.\n[Participant_2]: I have a question. Will I be interacting with clients over the phone or video conference? We use a video conferencing tool that will be covered during your training. Okay. Thank you.",
   "speaker_names": {
     "SPEAKER_00": "Tarek",
-    "SPEAKER_02": "Participant_1",
-    "SPEAKER_01": "Participant_2"
+    "SPEAKER_01": "Participant_1",
+    "SPEAKER_02": "Participant_2"
   }
 }

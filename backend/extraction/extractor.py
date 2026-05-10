@@ -2,7 +2,7 @@ import json
 import re
 import time
 from typing import Optional
-import ollama
+from groq import Groq
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -28,51 +28,29 @@ class MeetingExtractor:
     """
 
     def __init__(self):
-        self.model   = config.OLLAMA_MODEL
-        self.client  = ollama.Client(host=config.OLLAMA_BASE_URL)
-        self._verify_ollama()
+        self.model = config.GROQ_MODEL
+        if not config.GROQ_API_KEY:
+            raise RuntimeError("GROQ_API_KEY is missing. Set it in your environment.")
+        self.client = Groq(api_key=config.GROQ_API_KEY)
+        self._verify_groq()
 
-    def _verify_ollama(self):
-        """Make sure Ollama is running and model is available."""
+    def _verify_groq(self):
+        """Make sure Groq API is reachable and model is available."""
         try:
-            models = self.client.list()
-
-            # Ollama python client response shape differs by version:
-            # - object style: resp.models -> list[Model]
-            # - dict style:   {"models": [{...}, ...]}
-            raw_models = []
-            if isinstance(models, dict):
-                raw_models = models.get("models", []) or []
-            else:
-                raw_models = getattr(models, "models", []) or []
-
-            available = []
-            for m in raw_models:
-                if isinstance(m, dict):
-                    name = m.get("model") or m.get("name")
-                else:
-                    name = getattr(m, "model", None) or getattr(m, "name", None)
-                if name:
-                    available.append(name)
-
-            # Check if our model is available (flexible match)
-            match = any(
-                self.model.split(":")[0] in m for m in available
+            self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
+                    {"role": "user", "content": "connection test"},
+                ],
+                temperature=0.0,
+                max_tokens=10,
             )
-            if not match:
-                raise RuntimeError(
-                    f"Model '{self.model}' not found in Ollama.\n"
-                    f"Available: {available}\n"
-                    f"Run: ollama pull {self.model}"
-                )
-            print(f"[Extractor] Ollama ready. Model: {self.model} [ok]")
+            print(f"[Extractor] Groq ready. Model: {self.model} [ok]")
         except Exception as e:
-            if "Connection" in str(e) or "refused" in str(e).lower():
-                raise RuntimeError(
-                    "Ollama is not running!\n"
-                    "Start it with: ollama serve"
-                ) from e
-            raise
+            raise RuntimeError(
+                f"Groq API verification failed for model '{self.model}': {e}"
+            ) from e
 
     # ──────────────────────────────────────────────────────
     # CHUNKING
@@ -121,40 +99,29 @@ class MeetingExtractor:
 
     def _call_llm(self, prompt: str, expect_json: bool = True) -> str:
         """
-        Call Llama 3.1 via Ollama with retry logic.
+        Call Llama 3.1 via Groq with retry logic.
         Returns raw response text.
         """
         max_retries = 3
 
         for attempt in range(max_retries):
             try:
-                response = self.client.chat(
-    model=self.model,
-    messages=[
-        {
-            "role": "system",
-            "content": EXTRACTION_SYSTEM_PROMPT
-        },
-        {
-            "role": "user",
-            "content": prompt
-        }
-    ],
-    options={
-        "temperature": 0.0,
-        "num_predict": 800,    # was 1024 — shorter = faster
-        "num_ctx":     4096,   # limit context window
-    }
-)
-                # Ollama chat response can be object-style or dict-style.
-                if isinstance(response, dict):
-                    return (
-                        response.get("message", {}).get("content", "")
-                        if isinstance(response.get("message"), dict)
-                        else ""
-                    )
-
-                return response.message.content
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": EXTRACTION_SYSTEM_PROMPT
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    temperature=0.0,
+                    max_tokens=1000,
+                )
+                return (response.choices[0].message.content or "").strip()
 
             except Exception as e:
                 if attempt < max_retries - 1:
