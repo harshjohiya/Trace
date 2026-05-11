@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Navigate, Route, Routes } from "react-router-dom"
 import { AppHealthOverlay } from "@/components/shared/app-health-overlay"
-import { healthCheck } from "@/lib/api"
+import { healthCheck } from "@/api"
 import { AskPage } from "@/pages/AskPage"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { LandingPage } from "@/pages/LandingPage"

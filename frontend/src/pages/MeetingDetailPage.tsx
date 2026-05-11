@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Tabs } from "@/components/ui/tabs"
-import { deleteMeeting, getMeeting, getMeetingTranscript } from "@/lib/api"
+import { deleteMeeting, getMeeting, getMeetingTranscript } from "@/api"
 import {
   formatDate,
   formatDuration,

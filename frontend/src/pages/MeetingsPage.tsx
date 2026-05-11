@@ -11,7 +11,7 @@ import { TypeBadge } from "@/components/shared/type-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { listMeetings } from "@/lib/api"
+import { listMeetings } from "@/api"
 import { formatDate, formatDuration } from "@/lib/utils"
 import type { ApiClientError, Meeting } from "@/types"
 

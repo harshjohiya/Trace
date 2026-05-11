@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { getCurrentUser } from "@/lib/auth"
-import { getJobStatus, healthCheck, listMeetings, queryMeetings, uploadMeeting } from "@/lib/api"
+import { getJobStatus, healthCheck, listMeetings, queryMeetings, uploadMeeting } from "@/api"
 import { formatDate, formatDuration, getGreetingByHour } from "@/lib/utils"
 import type { ApiClientError, JobStatus, Meeting, QueryResponse } from "@/types"
 

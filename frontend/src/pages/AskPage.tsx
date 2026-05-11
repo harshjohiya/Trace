@@ -7,8 +7,8 @@ import { ErrorState } from "@/components/shared/error-state"
 import { PageShell } from "@/components/shared/page-shell"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { queryMeetings } from "@/lib/api"
-import { useLocalStorage } from "@/lib/hooks"
+import { queryMeetings } from "@/api"
+import { useLocalStorage } from "@/hooks"
 import type {
   ApiClientError,
   FilteredQueryResponse,
