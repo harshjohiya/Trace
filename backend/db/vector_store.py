@@ -57,13 +57,71 @@ class VectorStore:
         ).tolist()
 
     # ──────────────────────────────────────────────────────
+    # CHUNKING
+    # ──────────────────────────────────────────────────────
+
+    @staticmethod
+    def chunk_transcript_for_embedding(segments, meeting_id, chunk_tokens=400, overlap_tokens=50):
+        """
+        Chunk transcript segments by token count with overlap.
+        1 token ≈ 0.75 words (approximation, no tokenizer needed).
+        Returns list of chunk dicts ready for Chroma ingestion.
+        """
+        chunks = []
+        current_words = []
+        current_length = 0
+        chunk_index = 0
+        current_speaker = "unknown"
+        current_timestamp = 0
+
+        for segment in segments:
+            words = segment["text"].split()
+            word_count = len(words)
+
+            # Track first speaker/timestamp of this chunk
+            if current_length == 0:
+                current_speaker = segment.get("speaker", "unknown")
+                current_timestamp = segment.get("start", segment.get("start_time", 0))
+
+            current_words.extend(words)
+            current_length += word_count
+
+            if current_length >= chunk_tokens:
+                chunks.append({
+                    "text": " ".join(current_words),
+                    "meeting_id": meeting_id,
+                    "speaker": current_speaker,
+                    "timestamp": current_timestamp,
+                    "chunk_index": chunk_index,
+                    "type": "discussion"
+                })
+                chunk_index += 1
+                # Keep overlap
+                overlap_words = current_words[-overlap_tokens:] if overlap_tokens > 0 else []
+                current_words = overlap_words
+                current_length = len(overlap_words)
+
+        # Don't drop the last partial chunk
+        if current_words:
+            chunks.append({
+                "text": " ".join(current_words),
+                "meeting_id": meeting_id,
+                "speaker": current_speaker,
+                "timestamp": current_timestamp,
+                "chunk_index": chunk_index,
+                "type": "discussion"
+            })
+
+        return chunks
+
+    # ──────────────────────────────────────────────────────
     # INDEXING
     # ──────────────────────────────────────────────────────
 
-    def index_transcript(self, transcript: dict, chunk_size: int = 5):
+    def index_transcript(self, transcript: dict, chunk_tokens: int = 400, overlap_tokens: int = 50):
         """
-        Store transcript as overlapping dialogue chunks.
-        Each chunk = 5 speaker turns with metadata.
+        Store transcript as token-aware overlapping chunks.
+        Uses improved chunking based on token count for better semantic boundaries.
 
         This is what gets retrieved during RAG —
         the actual words spoken around a topic.
@@ -78,42 +136,28 @@ class VectorStore:
         if existing["ids"]:
             self.transcripts.delete(ids=existing["ids"])
 
-        documents = []
-        metadatas = []
-        ids       = []
+        # Use token-aware chunking
+        chunks = self.chunk_transcript_for_embedding(
+            segments,
+            meeting_id,
+            chunk_tokens=chunk_tokens,
+            overlap_tokens=overlap_tokens
+        )
 
-        for i in range(0, len(segments), chunk_size):
-            chunk_segs = segments[i: i + chunk_size + 2]  # slight overlap
+        # Prepare documents, metadatas, and IDs for batch insertion
+        documents = [c["text"] for c in chunks]
+        metadatas = [{
+            "meeting_id":   c["meeting_id"],
+            "speaker":      c["speaker"],
+            "timestamp":    c["timestamp"],
+            "chunk_index":  c["chunk_index"],
+            "type":         c["type"]
+        } for c in chunks]
+        ids = [f"{c['meeting_id']}_chunk_{c['chunk_index']}" for c in chunks]
 
-            # Format chunk as readable dialogue
-            chunk_text = "\n".join(
-                f"[{s['speaker']}] {s['text']}"
-                for s in chunk_segs
-            )
-
-            # Rich metadata for filtering
-            speakers_in_chunk = list(set(
-                s["speaker"] for s in chunk_segs
-            ))
-
-            chunk_id = f"{meeting_id}_transcript_chunk_{i}"
-            documents.append(chunk_text)
-            metadatas.append({
-                "meeting_id":  meeting_id,
-                "created_at":  transcript["created_at"],
-                "chunk_index": i,
-                "start_time":  chunk_segs[0]["start"],
-                "end_time":    chunk_segs[-1]["end"],
-                "speakers":    json.dumps(speakers_in_chunk),
-                "type":        "transcript_chunk"
-            })
-            ids.append(chunk_id)
-
-        # Batch embed + store
-        embeddings = self._embed(documents)
+        # Batch store
         self.transcripts.add(
             documents=documents,
-            embeddings=embeddings,
             metadatas=metadatas,
             ids=ids
         )

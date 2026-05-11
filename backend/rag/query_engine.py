@@ -26,6 +26,35 @@ class MeetingQueryEngine:
         self.model  = config.GROQ_MODEL
         print(f"[QueryEngine] Ready. Model: {self.model}")
 
+    @staticmethod
+    def retrieve_context(collection, query_text, meeting_id=None, n_results=5):
+        """
+        Semantic search with optional meeting-level filtering.
+        Always returns top n_results chunks with metadata.
+        """
+        query_params = {
+            "query_texts": [query_text],
+            "n_results":   n_results,
+            "include":     ["documents", "metadatas", "distances"]
+        }
+
+        # Only filter if a specific meeting is requested
+        if meeting_id:
+            query_params["where"] = {"meeting_id": {"$eq": meeting_id}}
+
+        results = collection.query(**query_params)
+
+        # Flatten results into usable list
+        chunks = []
+        for i, doc in enumerate(results["documents"][0]):
+            chunks.append({
+                "text":      doc,
+                "metadata":  results["metadatas"][0][i],
+                "relevance": round(1 - results["distances"][0][i], 3)
+            })
+
+        return chunks
+
     def _build_context(self, query: str) -> tuple[str, list]:
         """
         Retrieve relevant facts + transcript chunks for the query.
