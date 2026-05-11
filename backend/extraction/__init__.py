@@ -1,1 +1,0 @@
-"""Structured extraction from transcripts."""

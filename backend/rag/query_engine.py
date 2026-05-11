@@ -3,8 +3,8 @@ from groq import Groq
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
-from backend.config import config
-from backend.storage.vector_store import VectorStore
+from backend.core.config import config
+from backend.db.vector_store import VectorStore
 
 
 class MeetingQueryEngine:

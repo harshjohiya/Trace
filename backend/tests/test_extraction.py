@@ -1,5 +1,5 @@
 import json
-from backend.extraction.extractor import MeetingExtractor
+from backend.rag.extractor import MeetingExtractor
 
 TRANSCRIPT_FILE = "data/transcripts/test_meeting_001.json"
 

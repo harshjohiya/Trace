@@ -9,7 +9,7 @@ from pathlib import Path
 from datetime import datetime
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
-from backend.config import config
+from backend.core.config import config
 from backend.ingestion.speaker_identifier import SpeakerIdentifier
 
 

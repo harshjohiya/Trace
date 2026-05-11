@@ -5,7 +5,7 @@ from pathlib import Path
 from tqdm import tqdm
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
-from backend.config import config
+from backend.core.config import config
 
 class AudioProcessor:
     def __init__(self):

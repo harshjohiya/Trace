@@ -8,6 +8,7 @@ import { PageShell } from "@/components/shared/page-shell"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { queryMeetings } from "@/lib/api"
+import { useLocalStorage } from "@/lib/hooks"
 import type {
   ApiClientError,
   FilteredQueryResponse,
@@ -38,8 +39,8 @@ const suggestions = [
 export function AskPage() {
   const [question, setQuestion] = useState("")
   const [filter, setFilter] = useState<FilterPill>("all")
-  const [history, setHistory] = useState<string[]>([])
-  const [exchanges, setExchanges] = useState<Exchange[]>([])
+  const [history, setHistory] = useLocalStorage<string[]>("ask-page-history", [])
+  const [exchanges, setExchanges] = useLocalStorage<Exchange[]>("ask-page-exchanges", [])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>()
   const [typingById, setTypingById] = useState<Record<string, string>>({})

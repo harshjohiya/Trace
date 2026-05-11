@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 from chromadb.config import Settings
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
-from backend.config import config
+from backend.core.config import config
 
 
 class VectorStore:
@@ -24,10 +24,10 @@ class VectorStore:
             settings=Settings(
                 anonymized_telemetry=False,
                 chroma_product_telemetry_impl=(
-                    "backend.storage.chroma_noop_telemetry.NoOpProductTelemetry"
+                    "backend.db.chroma_noop_telemetry.NoOpProductTelemetry"
                 ),
                 chroma_telemetry_impl=(
-                    "backend.storage.chroma_noop_telemetry.NoOpProductTelemetry"
+                    "backend.db.chroma_noop_telemetry.NoOpProductTelemetry"
                 )
             )
         )
