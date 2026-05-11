@@ -118,7 +118,7 @@ export function AskPage() {
     <PageShell className="grid h-full gap-4 md:grid-cols-[260px_1fr] relative overflow-hidden">
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-purple-500/5 to-transparent -z-10 pointer-events-none" />
       <div className="fixed -left-40 top-40 h-96 w-96 rounded-full bg-primary/10 mix-blend-multiply blur-[100px] animate-blob -z-10 pointer-events-none" />
-      
+
       <aside className="hidden md:flex flex-col rounded-2xl border border-border-light/50 bg-white/50 backdrop-blur-xl shadow-sm p-4 overflow-hidden">
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white [&::-webkit-scrollbar-track]:bg-transparent">
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-3 px-2">Recent</h2>
@@ -160,10 +160,10 @@ export function AskPage() {
 
       <section className="relative flex flex-col rounded-2xl border border-border-light/50 bg-white/60 backdrop-blur-xl shadow-sm overflow-hidden h-full">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-50 pointer-events-none" />
-        
+
         <div className="flex-1 space-y-8 overflow-y-auto p-4 md:p-8 pb-40 scroll-smooth flex flex-col [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white [&::-webkit-scrollbar-thumb]:border [&::-webkit-scrollbar-thumb]:border-border-light/50 [&::-webkit-scrollbar-track]:bg-transparent">
           {error ? <ErrorState message={error} /> : null}
-          
+
           {exchanges.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center max-w-3xl mx-auto w-full mt-10 md:mt-20 px-4">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: "easeOut" }} className="text-center">
@@ -202,8 +202,8 @@ export function AskPage() {
           ) : (
             <div className="max-w-3xl mx-auto w-full space-y-8">
               {exchanges.map((exchange) => (
-                <motion.div 
-                  key={exchange.id} 
+                <motion.div
+                  key={exchange.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
@@ -214,7 +214,7 @@ export function AskPage() {
                       {exchange.question}
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-4 max-w-[95%] md:max-w-[90%]">
                     <div className="flex-shrink-0 mt-1">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-purple-500 shadow-sm text-white">
@@ -271,9 +271,8 @@ export function AskPage() {
                             }
                           >
                             <ChevronDown
-                              className={`h-3 w-3 transition-transform ${
-                                sourcesOpen[exchange.id] ? "rotate-180" : ""
-                              }`}
+                              className={`h-3 w-3 transition-transform ${sourcesOpen[exchange.id] ? "rotate-180" : ""
+                                }`}
                             />
                             {exchange.answer.sources.length} sources
                           </button>
@@ -326,7 +325,7 @@ export function AskPage() {
               </div>
             </div>
           ) : null}
-          
+
           <div className="h-32 md:h-40 flex-shrink-0 w-full" />
         </div>
 
@@ -390,11 +389,10 @@ function FilterButton({ label, active, onClick }: { label: string; active: boole
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-3 py-1 text-[11px] font-medium transition-all ${
-        active 
-          ? "bg-primary text-white shadow-sm" 
+      className={`rounded-full px-3 py-1 text-[11px] font-medium transition-all ${active
+          ? "bg-primary text-white shadow-sm"
           : "bg-bg-surface text-text-secondary hover:bg-border-light"
-      }`}
+        }`}
     >
       {label}
     </button>
@@ -420,7 +418,14 @@ function StructuredResultCard({
   filterType: QueryFilterType
   result: SearchResult
 }) {
-  if (filterType === "action_item") {
+  const raw = result.raw
+  const metadataType = result.metadata?.type
+  const resolvedType: QueryFilterType =
+    metadataType === "action_item" || metadataType === "decision" || metadataType === "blocker"
+      ? metadataType
+      : filterType
+
+  if (resolvedType === "action_item") {
     return (
       <div className="group rounded-2xl border border-border-light bg-white p-4 shadow-sm transition-all hover:shadow-md">
         <div className="flex gap-3">
@@ -428,18 +433,18 @@ function StructuredResultCard({
             <div className="h-2 w-2 rounded-full mt-1.5 bg-[var(--success)]" />
           </div>
           <div className="space-y-1.5 flex-1">
-            <p className="text-[14px] font-medium text-text-primary leading-snug">{result.task}</p>
+            <p className="text-[14px] font-medium text-text-primary leading-snug">{raw?.task ?? result.text}</p>
             <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-text-secondary">
-              <span className="flex items-center gap-1 rounded-md bg-bg-surface px-1.5 py-0.5"><span className="text-text-muted">Owner:</span> {result.owner}</span>
-              {result.deadline && <span className="flex items-center gap-1 rounded-md bg-bg-surface px-1.5 py-0.5"><span className="text-text-muted">Due:</span> {result.deadline}</span>}
+              {raw?.owner ? <span className="flex items-center gap-1 rounded-md bg-bg-surface px-1.5 py-0.5"><span className="text-text-muted">Owner:</span> {raw.owner}</span> : null}
+              {raw?.deadline ? <span className="flex items-center gap-1 rounded-md bg-bg-surface px-1.5 py-0.5"><span className="text-text-muted">Due:</span> {raw.deadline}</span> : null}
             </div>
           </div>
         </div>
       </div>
     )
   }
-  
-  if (filterType === "decision") {
+
+  if (resolvedType === "decision") {
     return (
       <div className="group rounded-2xl border border-border-light bg-white p-4 shadow-sm transition-all hover:shadow-md">
         <div className="flex gap-3">
@@ -447,16 +452,16 @@ function StructuredResultCard({
             <div className="h-2 w-2 rounded-full mt-1.5 bg-[var(--info)]" />
           </div>
           <div className="space-y-1.5 flex-1">
-            <p className="text-[14px] font-medium text-text-primary leading-snug">{result.decision}</p>
+            <p className="text-[14px] font-medium text-text-primary leading-snug">{raw?.decision ?? result.text}</p>
             <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-text-secondary">
-              <span className="flex items-center gap-1 rounded-md bg-bg-surface px-1.5 py-0.5"><span className="text-text-muted">By:</span> {result.made_by}</span>
+              {raw?.made_by ? <span className="flex items-center gap-1 rounded-md bg-bg-surface px-1.5 py-0.5"><span className="text-text-muted">By:</span> {raw.made_by}</span> : null}
             </div>
           </div>
         </div>
       </div>
     )
   }
-  
+
   return (
     <div className="group rounded-2xl border border-border-light bg-white p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex gap-3">
@@ -464,9 +469,9 @@ function StructuredResultCard({
           <div className="h-2 w-2 rounded-full mt-1.5 bg-[var(--danger)]" />
         </div>
         <div className="space-y-1.5 flex-1">
-          <p className="text-[14px] font-medium text-text-primary leading-snug">{result.blocker}</p>
+          <p className="text-[14px] font-medium text-text-primary leading-snug">{raw?.blocker ?? result.text}</p>
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-text-secondary">
-            <span className="flex items-center gap-1 rounded-md bg-bg-surface px-1.5 py-0.5 text-[#7f1d1d]"><span className="text-text-muted opacity-70">Affects:</span> {result.affects}</span>
+            {raw?.affects ? <span className="flex items-center gap-1 rounded-md bg-bg-surface px-1.5 py-0.5 text-[#7f1d1d]"><span className="text-text-muted opacity-70">Affects:</span> {raw.affects}</span> : null}
           </div>
         </div>
       </div>

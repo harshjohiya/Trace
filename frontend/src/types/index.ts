@@ -79,7 +79,7 @@ export interface QueryResponse {
   sources: Source[]
 }
 
-export interface SearchResult {
+export interface SearchResultRaw {
   task?: string
   owner?: string
   deadline?: string | null
@@ -88,6 +88,18 @@ export interface SearchResult {
   made_by?: string
   blocker?: string
   affects?: string
+}
+
+export interface SearchResultMetadata {
+  type?: QueryFilterType
+  [key: string]: unknown
+}
+
+export interface SearchResult {
+  text: string
+  metadata?: SearchResultMetadata | null
+  relevance?: number
+  raw?: SearchResultRaw | null
 }
 
 export interface FilteredQueryResponse {
@@ -108,13 +120,13 @@ export interface JobStatus {
   job_id: string
   meeting_id: string
   status:
-    | "queued"
-    | "converting"
-    | "transcribing"
-    | "extracting"
-    | "indexing"
-    | "completed"
-    | "failed"
+  | "queued"
+  | "converting"
+  | "transcribing"
+  | "extracting"
+  | "indexing"
+  | "completed"
+  | "failed"
   progress: number
   error: string | null
   created_at: string
