@@ -68,7 +68,6 @@ app.add_middleware(
 print("[API] Loading models...")
 audio_processor = AudioProcessor()
 transcriber     = Transcriber()
-transcriber.load_models()
 extractor       = MeetingExtractor()
 vector_store    = VectorStore()
 query_engine    = MeetingQueryEngine(vector_store=vector_store)

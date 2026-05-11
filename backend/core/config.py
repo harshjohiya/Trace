@@ -7,6 +7,7 @@ class Config:
     # LLM
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    GROQ_AUDIO_MODEL = os.getenv("GROQ_AUDIO_MODEL", "whisper-large-v3")
 
     # Hugging Face
     HF_TOKEN = os.getenv("HF_TOKEN")
