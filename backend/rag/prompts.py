@@ -3,157 +3,155 @@
 # DO NOT simplify — each constraint exists for a reason.
 
 EXTRACTION_SYSTEM_PROMPT = """You are a precise meeting analyst.
-Your job is to extract structured information from meeting transcripts.
+Extract ONLY explicitly stated, concrete information.
 
-RULES:
-- Extract ONLY what is explicitly stated. Never infer or assume.
-- For owners: use the exact name mentioned. If unclear, use "Unassigned".
-- For deadlines: use exact phrases ("today", "next Friday", "2 weeks").
-  If no deadline mentioned, use null.
-- For decisions: only include FINAL decisions, not discussions or options.
-- Output ONLY valid JSON. No explanation, no markdown, no extra text.
+STRICT RULES:
+- Extract ONLY clear, specific commitments — not vague discussions
+- An action item MUST have: a specific task AND someone who said
+  they would do it (or was explicitly asked to do it)
+- A decision MUST be something the group explicitly agreed on —
+  not an opinion, suggestion, or possibility
+- A blocker MUST be something explicitly preventing work —
+  not a general challenge or topic of discussion
+- If owner is unknown, use the speaker label (Speaker, John, etc)
+- For deadlines use exact phrases said out loud only
+- Output ONLY valid JSON. No explanation, no markdown, nothing else.
 """
 
-CHUNK_EXTRACTION_PROMPT = """Extract structured data from this meeting transcript chunk.
+CHUNK_EXTRACTION_PROMPT = """Extract ONLY concrete, explicit items
+from this meeting transcript chunk.
 
 TRANSCRIPT:
 {transcript}
 
-DEFINITIONS (read carefully):
-- action_item: any task, request, or follow-up someone needs to do
-- decision: something that was AGREED or DECIDED (not just discussed)
-- blocker: anything preventing someone from starting work, missing info,
-  missing documents, unresolved dependencies, or explicit problems stated
-- deadline: ANY time reference near a task — "today", "this afternoon",
-  "next week", "in two weeks", "by Friday" ALL count as deadlines
+STRICT DEFINITIONS:
 
-Extract and return ONLY this JSON structure:
+action_item: Someone EXPLICITLY agreed to do something OR was
+explicitly asked and accepted. Must be specific and actionable.
+
+BAD examples (do NOT extract these):
+- "we should look into that sometime"
+- "it would be good to discuss this"
+- "someone needs to think about it"
+- "suggest items for the meeting"
+- "think about what could be useful"
+
+GOOD examples (extract these):
+- "John said he will send the report by Friday"
+- "Sarah, can you review the PR? Sure, I'll do it today"
+- "I'll set up the meeting for next week"
+
+decision: The group EXPLICITLY agreed or concluded something.
+Must be a real conclusion, not a discussion point.
+
+BAD examples (do NOT extract):
+- "we talked about increasing hiring"
+- "try and invest a bit more in that"
+- "it would be nice to do X"
+
+GOOD examples (extract these):
+- "we decided to launch on Friday"
+- "the team agreed to remove the on-call weekend requirement"
+- "we are going with option B"
+
+blocker: Something EXPLICITLY preventing work from starting
+or continuing right now.
+
+BAD examples (do NOT extract):
+- "it's a bit challenging"
+- "we need to think about scaling"
+- general topic discussions
+
+GOOD examples (extract these):
+- "we cannot proceed until we have access to the tool"
+- "blocked on the API rate limit issue"
+- "missing the signed document before work can start"
+
+Return ONLY this JSON structure, nothing else:
 {{
   "action_items": [
     {{
-      "task": "clear description of what needs to be done",
-      "owner": "person responsible or Unassigned",
-      "deadline": "exact phrase used or null if truly none mentioned",
-      "mentioned_by": "speaker who assigned this task"
+      "task": "specific concrete task description",
+      "owner": "name of person who committed or was assigned",
+      "deadline": "exact phrase used or null",
+      "mentioned_by": "speaker who assigned or committed"
     }}
   ],
   "decisions": [
     {{
-      "decision": "what was decided",
-      "made_by": "speaker who made or announced the decision"
+      "decision": "exactly what was decided",
+      "made_by": "speaker or Unknown"
     }}
   ],
   "blockers": [
     {{
-      "blocker": "what is blocking progress",
+      "blocker": "what is explicitly blocking progress",
       "affects": "who or what is affected"
     }}
   ],
   "key_topics": [
-    "brief topic 1",
-    "brief topic 2"
+    "only major topics discussed, max 5"
   ]
 }}
 
-BLOCKER EXAMPLES — these should ALL be extracted as blockers:
-- "I don't think I received it" → blocker: missing document
-- "we can't start until..." → blocker: dependency
-- "waiting on..." → blocker: waiting dependency
-- "you cannot work until I have the signed document" → blocker: unsigned document
-
-Return empty arrays [] only if genuinely nothing found.
+Return empty arrays [] if nothing clearly qualifies.
+When in doubt — leave it out.
 Return ONLY the JSON object, absolutely nothing else."""
 
 
-AGGREGATION_PROMPT = """Merge these extraction results from multiple chunks
-of the same meeting into one clean final output.
+AGGREGATION_PROMPT = """Merge these extraction results from
+multiple chunks of the same meeting.
 
 CHUNKS DATA:
 {chunks_json}
 
-RULES:
-- Merge duplicates (same task/decision mentioned twice → keep once)
-- Preserve ALL owners and deadlines — never drop them
-- Keep all unique blockers
-- Combine key topics, remove duplicates
-- Write a 2-3 sentence summary of the full meeting
+STRICT RULES:
+- Keep ONLY concrete, specific items
+- Remove anything vague or generic
+- Merge duplicates (same task mentioned twice = keep once)
+- Remove items where task description is under 8 words
+  and sounds like a discussion topic not a commitment
+- Remove action items where owner is Unassigned AND
+  the task is vague (keep Unassigned only if task is specific)
+- Max 10 action items total — keep only the strongest ones
+- Max 6 decisions total — keep only clear conclusions
+- Max 4 blockers — keep only explicit blockers
+- Write a 2-3 sentence summary of what the meeting was about
 
 Return ONLY this JSON, nothing else:
 {{
   "action_items": [
     {{
-      "task": "task description",
-      "owner": "owner or Unassigned",
+      "task": "specific task",
+      "owner": "person or Unassigned",
       "deadline": "deadline phrase or null",
       "mentioned_by": "speaker"
     }}
   ],
   "decisions": [
     {{
-      "decision": "decision description",
+      "decision": "what was decided",
       "made_by": "speaker"
     }}
   ],
   "blockers": [
     {{
-      "blocker": "blocker description",
-      "affects": "who or what is affected"
+      "blocker": "explicit blocker",
+      "affects": "who affected"
     }}
   ],
-  "key_topics": ["topic1", "topic2"],
-  "summary": "2-3 sentence plain English summary of the entire meeting"
-}}"""
-
-AGGREGATION_PROMPT = """You are merging extraction results from multiple chunks
-of the same meeting transcript into one clean final summary.
-
-CHUNKS DATA:
-{chunks_json}
-
-RULES:
-- Merge duplicate action items (same task mentioned multiple times → keep once)
-- Merge duplicate decisions
-- Keep all unique blockers
-- Combine all key topics, remove duplicates
-- Preserve all owner and deadline information
-- If two chunks have the same task with different owners, keep both
-
-Return ONLY this JSON structure, nothing else:
-{{
-  "action_items": [
-    {{
-      "task": "task description",
-      "owner": "owner name or Unassigned",
-      "deadline": "deadline or null",
-      "mentioned_by": "speaker"
-    }}
-  ],
-  "decisions": [
-    {{
-      "decision": "decision description",
-      "made_by": "speaker or Unknown"
-    }}
-  ],
-  "blockers": [
-    {{
-      "blocker": "blocker description",
-      "affects": "who/what affected"
-    }}
-  ],
-  "key_topics": ["topic1", "topic2"],
-  "summary": "2-3 sentence plain English summary of the entire meeting"
+  "key_topics": ["topic1", "topic2", "topic3"],
+  "summary": "2-3 sentence plain English summary of the meeting"
 }}"""
 
 
-MEETING_TITLE_PROMPT = """Given this meeting summary and topics, generate:
-1. A short meeting title (max 8 words)
-2. The meeting type (standup/planning/onboarding/review/discussion/other)
+MEETING_TITLE_PROMPT = """Generate a meeting title and type.
 
 SUMMARY: {summary}
 TOPICS: {topics}
 
 Return ONLY this JSON:
 {{
-  "title": "meeting title here",
-  "meeting_type": "type here"
+  "title": "specific meeting title under 8 words",
+  "meeting_type": "standup|planning|review|onboarding|discussion"
 }}"""

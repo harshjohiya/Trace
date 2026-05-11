@@ -307,79 +307,107 @@ Return ONLY the summary text, no JSON, no labels."""
 
     def _clean_extraction(self, data: dict) -> dict:
         """
-        Post-process LLM output to remove:
-        - Null/empty entries in any list
-        - Duplicate decisions and action items
-        - Overly long task descriptions (trim to clean phrases)
+        Hard filter to remove weak extractions.
+        Runs after LLM aggregation as a safety net.
         """
-        # ── Remove null/empty blockers ───────────────────────
-        data["blockers"] = [
-            b for b in data.get("blockers", [])
-            if isinstance(b, dict) and b.get("blocker") and b.get("affects")
+
+        # --- Filter action items ---
+        VAGUE_TASK_PHRASES = [
+            "think about", "suggest items", "suggest something",
+            "look into", "consider", "discuss", "talk about",
+            "maybe", "might want to", "should probably",
+            "it would be good", "we could", "someone should",
+            "put ideas forward", "reach out to the speaker",
+            "think about what could", "suggest items for",
         ]
 
-        # ── Remove null/empty action items ───────────────────
-        data["action_items"] = [
-            a for a in data.get("action_items", [])
-            if isinstance(a, dict) and a.get("task") and a.get("owner")
+        clean_actions = []
+        seen_tasks = set()
+
+        for item in data.get("action_items", []):
+            task = item.get("task", "").strip()
+            if not task:
+                continue
+
+            # Skip if too short (under 5 words)
+            if len(task.split()) < 5:
+                continue
+
+            # Skip if matches vague phrases
+            task_lower = task.lower()
+            if any(phrase in task_lower for phrase in VAGUE_TASK_PHRASES):
+                continue
+
+            # Deduplicate
+            key = task_lower[:50]
+            if key in seen_tasks:
+                continue
+            seen_tasks.add(key)
+
+            clean_actions.append(item)
+
+        data["action_items"] = clean_actions[:10]  # max 10
+
+        # --- Filter decisions ---
+        VAGUE_DECISION_PHRASES = [
+            "try and", "invest a bit", "maybe we should",
+            "it would be nice", "we talked about",
+            "could be good", "might be worth",
         ]
 
-        # ── Deduplicate decisions ────────────────────────────
-        seen = set()
-        clean_dec = []
-        for d in data.get("decisions", []):
-            if not isinstance(d, dict):
-                continue
-            # Normalize: lowercase + first 60 chars as key
-            key = d.get("decision", "").lower().strip()[:60]
-            if key and key not in seen:
-                clean_dec.append(d)
-                seen.add(key)
-        data["decisions"] = clean_dec
+        clean_decisions = []
+        seen_decisions = set()
 
-        # ── Deduplicate action items ─────────────────────────
-        seen = set()
-        clean_acts = []
-        for a in data.get("action_items", []):
-            if not isinstance(a, dict):
+        for item in data.get("decisions", []):
+            decision = item.get("decision", "").strip()
+            if not decision:
                 continue
 
-            # Trim long task descriptions to a clean phrase.
-            task = a.get("task", "").strip()
-            task = re.sub(r"\s+", " ", task)
-            if len(task) > 140:
-                task = task[:140].rsplit(" ", 1)[0].strip(" ,.;:")
-                a["task"] = task
-
-            key = task.lower()[:60]
-            if key and key not in seen:
-                clean_acts.append(a)
-                seen.add(key)
-        data["action_items"] = clean_acts
-
-        # ── Deduplicate blockers ─────────────────────────────
-        seen = set()
-        clean_blocks = []
-        for b in data.get("blockers", []):
-            if not isinstance(b, dict):
+            if len(decision.split()) < 5:
                 continue
-            key = b.get("blocker", "").lower().strip()[:60]
-            if key and key not in seen:
-                clean_blocks.append(b)
-                seen.add(key)
-        data["blockers"] = clean_blocks
 
-        # ── Deduplicate key topics ───────────────────────────
-        seen = set()
+            decision_lower = decision.lower()
+            if any(phrase in decision_lower for phrase in VAGUE_DECISION_PHRASES):
+                continue
+
+            key = decision_lower[:50]
+            if key in seen_decisions:
+                continue
+            seen_decisions.add(key)
+
+            clean_decisions.append(item)
+
+        data["decisions"] = clean_decisions[:6]  # max 6
+
+        # --- Filter blockers ---
+        clean_blockers = []
+        seen_blockers = set()
+
+        for item in data.get("blockers", []):
+            blocker = item.get("blocker", "")
+            if not blocker or blocker is None:
+                continue
+            if len(str(blocker).split()) < 3:
+                continue
+
+            key = str(blocker).lower()[:50]
+            if key in seen_blockers:
+                continue
+            seen_blockers.add(key)
+
+            clean_blockers.append(item)
+
+        data["blockers"] = clean_blockers[:4]  # max 4
+
+        # --- Clean key topics ---
+        seen_topics = set()
         clean_topics = []
         for t in data.get("key_topics", []):
-            if not isinstance(t, str):
-                continue
-            key = t.lower().strip()[:50]
-            if key and key not in seen:
+            key = t.lower().strip()[:40]
+            if key and key not in seen_topics:
                 clean_topics.append(t)
-                seen.add(key)
-        data["key_topics"] = clean_topics
+                seen_topics.add(key)
+        data["key_topics"] = clean_topics[:5]  # max 5
 
         return data
 
