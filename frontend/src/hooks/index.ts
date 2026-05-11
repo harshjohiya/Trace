@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
 import { getCurrentUser } from "@/lib/auth"
 import type { Meeting } from "@/types"
 
@@ -6,7 +6,10 @@ export function useCurrentUser() {
   return useMemo(() => getCurrentUser(), [])
 }
 
-export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T,
+): [T, Dispatch<SetStateAction<T>>] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
       const item = typeof window !== "undefined" ? window.localStorage.getItem(key) : null
@@ -16,12 +19,17 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
     }
   })
 
-  const setValue = (value: T) => {
+  const setValue: Dispatch<SetStateAction<T>> = (value) => {
     try {
-      setStoredValue(value)
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(key, JSON.stringify(value))
-      }
+      setStoredValue((previousValue) => {
+        const valueToStore = typeof value === "function"
+          ? (value as (currentValue: T) => T)(previousValue)
+          : value
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(key, JSON.stringify(valueToStore))
+        }
+        return valueToStore
+      })
     } catch {
       console.error(`Failed to save to localStorage: ${key}`)
     }
