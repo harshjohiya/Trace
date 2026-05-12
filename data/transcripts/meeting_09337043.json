@@ -1,6 +1,6 @@
 {
-  "meeting_id": "test_meeting_001",
-  "created_at": "2026-05-11T15:52:10.795496",
+  "meeting_id": "meeting_09337043",
+  "created_at": "2026-05-12T18:12:49.538407",
   "total_duration": 257.87,
   "speaker_count": 1,
   "diarization": false,
@@ -189,12 +189,12 @@
       "speaker": "Speaker",
       "text": "Thanks.",
       "start": 155.62,
-      "end": 156.06
+      "end": 156.04
     },
     {
       "speaker": "Speaker",
       "text": "Thanks. Bye.",
-      "start": 156.08,
+      "start": 156.06,
       "end": 156.7
     },
     {
@@ -237,36 +237,36 @@
       "speaker": "Speaker",
       "text": "First, let me tell you a little bit about our product and our company.",
       "start": 176.5,
-      "end": 180.84
+      "end": 179.9
     },
     {
       "speaker": "Speaker",
       "text": "Then we'll go through your duties and responsibilities.",
-      "start": 180.84,
-      "end": 183.46
+      "start": 180.5,
+      "end": 182.76
     },
     {
       "speaker": "Speaker",
       "text": "And finally, you can ask me questions if you have any.",
-      "start": 183.46,
-      "end": 186.34
+      "start": 183.4,
+      "end": 185.82
     },
     {
       "speaker": "Speaker",
       "text": "Sounds good.",
-      "start": 186.34,
-      "end": 189.44
+      "start": 186.88,
+      "end": 187.66
     },
     {
       "speaker": "Speaker",
-      "text": "So the two owners, Jen and Nina, created our company three years ago.",
-      "start": 189.44,
-      "end": 193.82
+      "text": "So the two owners, Jen and Mina, created our company three years ago.",
+      "start": 189.0,
+      "end": 193.28
     },
     {
       "speaker": "Speaker",
-      "text": "They created software for training work teams called Logateam It became an instant success and now we have 43 employees 82 customers and five different product packages",
-      "start": 193.82,
+      "text": "They created software for training work teams called Logiteam It became an instant success and now we have 43 employees 82 customers and five different product packages",
+      "start": 193.56,
       "end": 205.57
     },
     {
@@ -301,52 +301,46 @@
     },
     {
       "speaker": "Speaker",
-      "text": "By the end of this training,",
-      "start": 221.77,
-      "end": 223.35
+      "text": "by the end of this training you'll be able to assist our clients with using the software to",
+      "start": 221.45,
+      "end": 226.81
     },
     {
       "speaker": "Speaker",
-      "text": "you'll be able to assist our clients with using the software to its full potential.",
-      "start": 223.35,
-      "end": 227.61
+      "text": "its full potential do you guys have any questions so far yes i have a question do we use our own",
+      "start": 226.81,
+      "end": 232.71
     },
     {
       "speaker": "Speaker",
-      "text": "Do you guys have any questions so far? Yes, I have a question. Do we use our own devices or",
-      "start": 228.37,
-      "end": 233.55
+      "text": "devices or the company's laptop during the training great question you don't need your",
+      "start": 232.71,
+      "end": 238.45
     },
     {
       "speaker": "Speaker",
-      "text": "the company's laptop during the training? Great question. You don't need your own device. We will",
-      "start": 233.55,
-      "end": 239.41
+      "text": "own device we will set up your account on the computer you'll be using for work so it's better",
+      "start": 238.45,
+      "end": 243.21
     },
     {
       "speaker": "Speaker",
-      "text": "set up your account on the computer you'll be using for work, so it's better to start working",
-      "start": 239.41,
-      "end": 243.83
+      "text": "to start working on that great thanks i have a question will i be interacting with clients over",
+      "start": 243.21,
+      "end": 250.25
     },
     {
       "speaker": "Speaker",
-      "text": "on that. Great, thanks. I have a question. Will I be interacting with clients over the phone or",
-      "start": 243.83,
-      "end": 250.97
+      "text": "the phone or video conference? We use a video conferencing tool that will be covered during",
+      "start": 250.25,
+      "end": 255.61
     },
     {
       "speaker": "Speaker",
-      "text": "video conference? We use a video conferencing tool that will be covered during your training.",
-      "start": 250.97,
-      "end": 256.09
-    },
-    {
-      "speaker": "Speaker",
-      "text": "Okay, thank you.",
-      "start": 256.65,
+      "text": "your training. Okay, thank you.",
+      "start": 255.61,
       "end": 257.87
     }
   ],
-  "full_text": "[Speaker]: Good morning, everyone. How are you all doing?\n[Speaker]: Great, thanks.\n[Speaker]: Fine, all good.\n[Speaker]: Thank you all for joining. If you haven't met yet, we have our two newly hired customer care team members, Ken and Maria. Hi, guys. Welcome to the team.\n[Speaker]: Thanks, Angela. It's great to be here.\n[Speaker]: Hi, everyone.\n[Speaker]: And Tarek from Human Resources is joining us for a brief period of time. Hi, Tarek.\n[Speaker]: Morning, everyone.\n[Speaker]: I scheduled this meeting to introduce our new team members to our training process.\n[Speaker]: Tarek requested to be part of this meeting because he has some information for you as well.\n[Speaker]: Tarek, would you like to begin?\n[Speaker]: Sure. Thank you, Angela.\n[Speaker]: So, Maria, Ken, welcome to Lock18.\n[Speaker]: I want to talk to you about some forms that you need to fill out before you can begin work.\n[Speaker]: You have received an email last week with our liability policy and our confidentiality agreement The one about you agreeing not to share any confidential information about our company with any third parties\n[Speaker]: Have you received it? Yes, I have. I don't think I received that. I'm sorry.\n[Speaker]: No problem. I will send it to you today. Once you have the document, please read it carefully\n[Speaker]: and signed electronically.\n[Speaker]: There are four places where you will need\n[Speaker]: to insert your initials\n[Speaker]: and two where we need your signature.\n[Speaker]: Once signed and saved,\n[Speaker]: please send the document directly to me.\n[Speaker]: My email address is tarik.godas at mail.ca.\n[Speaker]: That is T-A-R-E-K dot G-U-L-D-U-Z at mail.ca.\n[Speaker]: This is very important because you cannot work until I have the signed document on file.\n[Speaker]: Do you have any questions No I send it to you this afternoon Perfect Thank you Can Ken please send me an email so I can double check the email address I have in your file Absolutely thanks Okay that it\n[Speaker]: Thank you Angela for giving me the time. I will leave the meeting now. Have a good day everyone.\n[Speaker]: Maria, Ken, good luck with your training.\n[Speaker]: Thanks, Tarek. Speak to you soon.\n[Speaker]: Thanks.\n[Speaker]: Thanks. Bye.\n[Speaker]: Great. So let's get back to our business.\n[Speaker]: Maria and Ken, you were both hired for the customer care positions.\n[Speaker]: This means that you'll deal with our clients, team leads,\n[Speaker]: and other companies who have purchased our software.\n[Speaker]: You will answer some of their questions or provide a short demo\n[Speaker]: of how our software and its features work.\n[Speaker]: First, let me tell you a little bit about our product and our company.\n[Speaker]: Then we'll go through your duties and responsibilities.\n[Speaker]: And finally, you can ask me questions if you have any.\n[Speaker]: Sounds good.\n[Speaker]: So the two owners, Jen and Nina, created our company three years ago.\n[Speaker]: They created software for training work teams called Logateam It became an instant success and now we have 43 employees 82 customers and five different product packages\n[Speaker]: Our product is simple to use with some training,\n[Speaker]: and that's where you come into the picture.\n[Speaker]: In the next two weeks, you'll become experts of Logiteam.\n[Speaker]: We'll make sure that you're familiar with all basic functions,\n[Speaker]: security features, add-ons, and the most common glitches too.\n[Speaker]: By the end of this training,\n[Speaker]: you'll be able to assist our clients with using the software to its full potential.\n[Speaker]: Do you guys have any questions so far? Yes, I have a question. Do we use our own devices or\n[Speaker]: the company's laptop during the training? Great question. You don't need your own device. We will\n[Speaker]: set up your account on the computer you'll be using for work, so it's better to start working\n[Speaker]: on that. Great, thanks. I have a question. Will I be interacting with clients over the phone or\n[Speaker]: video conference? We use a video conferencing tool that will be covered during your training.\n[Speaker]: Okay, thank you."
+  "full_text": "[Speaker]: Good morning, everyone. How are you all doing?\n[Speaker]: Great, thanks.\n[Speaker]: Fine, all good.\n[Speaker]: Thank you all for joining. If you haven't met yet, we have our two newly hired customer care team members, Ken and Maria. Hi, guys. Welcome to the team.\n[Speaker]: Thanks, Angela. It's great to be here.\n[Speaker]: Hi, everyone.\n[Speaker]: And Tarek from Human Resources is joining us for a brief period of time. Hi, Tarek.\n[Speaker]: Morning, everyone.\n[Speaker]: I scheduled this meeting to introduce our new team members to our training process.\n[Speaker]: Tarek requested to be part of this meeting because he has some information for you as well.\n[Speaker]: Tarek, would you like to begin?\n[Speaker]: Sure. Thank you, Angela.\n[Speaker]: So, Maria, Ken, welcome to Lock18.\n[Speaker]: I want to talk to you about some forms that you need to fill out before you can begin work.\n[Speaker]: You have received an email last week with our liability policy and our confidentiality agreement The one about you agreeing not to share any confidential information about our company with any third parties\n[Speaker]: Have you received it? Yes, I have. I don't think I received that. I'm sorry.\n[Speaker]: No problem. I will send it to you today. Once you have the document, please read it carefully\n[Speaker]: and signed electronically.\n[Speaker]: There are four places where you will need\n[Speaker]: to insert your initials\n[Speaker]: and two where we need your signature.\n[Speaker]: Once signed and saved,\n[Speaker]: please send the document directly to me.\n[Speaker]: My email address is tarik.godas at mail.ca.\n[Speaker]: That is T-A-R-E-K dot G-U-L-D-U-Z at mail.ca.\n[Speaker]: This is very important because you cannot work until I have the signed document on file.\n[Speaker]: Do you have any questions No I send it to you this afternoon Perfect Thank you Can Ken please send me an email so I can double check the email address I have in your file Absolutely thanks Okay that it\n[Speaker]: Thank you Angela for giving me the time. I will leave the meeting now. Have a good day everyone.\n[Speaker]: Maria, Ken, good luck with your training.\n[Speaker]: Thanks, Tarek. Speak to you soon.\n[Speaker]: Thanks.\n[Speaker]: Thanks. Bye.\n[Speaker]: Great. So let's get back to our business.\n[Speaker]: Maria and Ken, you were both hired for the customer care positions.\n[Speaker]: This means that you'll deal with our clients, team leads,\n[Speaker]: and other companies who have purchased our software.\n[Speaker]: You will answer some of their questions or provide a short demo\n[Speaker]: of how our software and its features work.\n[Speaker]: First, let me tell you a little bit about our product and our company.\n[Speaker]: Then we'll go through your duties and responsibilities.\n[Speaker]: And finally, you can ask me questions if you have any.\n[Speaker]: Sounds good.\n[Speaker]: So the two owners, Jen and Mina, created our company three years ago.\n[Speaker]: They created software for training work teams called Logiteam It became an instant success and now we have 43 employees 82 customers and five different product packages\n[Speaker]: Our product is simple to use with some training,\n[Speaker]: and that's where you come into the picture.\n[Speaker]: In the next two weeks, you'll become experts of Logiteam.\n[Speaker]: We'll make sure that you're familiar with all basic functions,\n[Speaker]: security features, add-ons, and the most common glitches too.\n[Speaker]: by the end of this training you'll be able to assist our clients with using the software to\n[Speaker]: its full potential do you guys have any questions so far yes i have a question do we use our own\n[Speaker]: devices or the company's laptop during the training great question you don't need your\n[Speaker]: own device we will set up your account on the computer you'll be using for work so it's better\n[Speaker]: to start working on that great thanks i have a question will i be interacting with clients over\n[Speaker]: the phone or video conference? We use a video conferencing tool that will be covered during\n[Speaker]: your training. Okay, thank you."
 }

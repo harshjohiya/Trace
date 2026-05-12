@@ -1,0 +1,66 @@
+{
+  "meeting_id": "meeting_09337043",
+  "created_at": "2026-05-12T18:12:49.538407",
+  "title": "Team Policy Meeting",
+  "meeting_type": "discussion",
+  "duration_sec": 257.87,
+  "speakers": [
+    "Speaker"
+  ],
+  "action_items": [
+    {
+      "task": "send the liability policy and confidentiality agreement email",
+      "owner": "Tarek",
+      "deadline": "today",
+      "mentioned_by": "Tarek"
+    },
+    {
+      "task": "read the liability policy and confidentiality agreement carefully and sign electronically",
+      "owner": "Maria and Ken",
+      "deadline": null,
+      "mentioned_by": "Tarek"
+    },
+    {
+      "task": "send the document directly to Tarek",
+      "owner": "Speaker",
+      "deadline": "this afternoon",
+      "mentioned_by": "Speaker"
+    },
+    {
+      "task": "send an email to double check the email address",
+      "owner": "Ken",
+      "deadline": null,
+      "mentioned_by": "Speaker"
+    },
+    {
+      "task": "set up account on the computer for work",
+      "owner": "Speaker",
+      "deadline": "in the next two weeks",
+      "mentioned_by": "Speaker"
+    }
+  ],
+  "decisions": [],
+  "blockers": [
+    {
+      "blocker": "missing signed confidentiality agreement",
+      "affects": "Maria and Ken"
+    },
+    {
+      "blocker": "missing the signed document",
+      "affects": "work cannot start"
+    }
+  ],
+  "key_topics": [
+    "liability policy and confidentiality agreement",
+    "customer care positions",
+    "employee training",
+    "client interaction"
+  ],
+  "summary": "The meeting covered various topics including liability policy, confidentiality agreement, and employee training. Action items were assigned to team members to complete tasks such as sending emails and setting up accounts. The meeting also discussed the importance of signed documents and confidentiality agreements.",
+  "metadata": {
+    "extraction_time_sec": 2.6,
+    "chunks_processed": 4,
+    "model_used": "llama-3.3-70b-versatile",
+    "segment_count": 56
+  }
+}

@@ -384,8 +384,8 @@ class VectorStore:
                 "metadata":   meta,
                 "score":      round(1 - dist, 3),
                 "meeting_id": meta.get("meeting_id"),
-                "start_time": meta.get("start_time"),
-                "end_time":   meta.get("end_time")
+                "start_time": meta.get("timestamp"),
+                "end_time":   meta.get("timestamp")
             })
 
         return hits
