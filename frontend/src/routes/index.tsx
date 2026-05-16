@@ -54,6 +54,7 @@ function LandingPage() {
       <Hero />
       <ProductPreview />
       <HowItWorks />
+      <AskTraceOverview />
       <Features />
       <SocialProof />
       <FinalCTA />
@@ -262,6 +263,113 @@ function ProductPreview() {
           </div>
         </div>
       </motion.div>
+    </section>
+  );
+}
+
+function AskTraceOverview() {
+  return (
+    <section className="px-6 py-24" style={{ background: "var(--white)" }}>
+      <SectionHeader 
+        eyebrow="Conversational Memory" 
+        title="Chat with your entire meeting history" 
+        sub="Don't spend hours scrubbing through recordings. Ask Trace directly." 
+      />
+      <div className="mx-auto" style={{ maxWidth: 760 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+          className="rounded-[20px] p-6 md:p-10"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          {/* Chat Container */}
+          <div className="flex flex-col gap-6">
+            
+            {/* User Message */}
+            <div className="self-end max-w-[85%] sm:max-w-[70%]">
+              <div 
+                className="px-5 py-3.5 rounded-2xl rounded-tr-sm text-[14px] leading-[1.6] shadow-sm"
+                style={{ background: "var(--accent)", color: "var(--white)" }}
+              >
+                What did Sarah say about the Q3 shipping timeline and what are the current blockers?
+              </div>
+            </div>
+
+            {/* Trace Response */}
+            <div className="self-start max-w-[90%] sm:max-w-[80%]">
+              <div className="flex gap-3 mb-2 px-1">
+                <div 
+                  className="flex-shrink-0 flex items-center justify-center rounded-full mt-1"
+                  style={{ width: 28, height: 28, background: "var(--ink-1)", color: "var(--white)" }}
+                >
+                  <WaveformIcon size={14} />
+                </div>
+                <div>
+                  <div 
+                    className="px-5 py-4 rounded-2xl rounded-tl-sm text-[14px] leading-[1.65] shadow-sm bg-white"
+                    style={{ border: "1px solid var(--border)", color: "var(--ink-1)" }}
+                  >
+                    Based on recent meetings, Sarah stated that the Q3 shipping timeline is currently delayed by <strong>two weeks</strong>. <br/><br/>
+                    The primary blockers identified are:
+                    <ul className="list-disc pl-5 mt-2 space-y-1.5" style={{ color: "var(--ink-2)" }}>
+                      <li>DevOps has not yet provisioned the staging environment for QA testing.</li>
+                      <li>The new authentication module is causing unexpected rate-limiting errors on retry paths.</li>
+                    </ul>
+                  </div>
+                  
+                  {/* Sources attached to response */}
+                  <div className="flex flex-wrap gap-2 mt-3 ml-1">
+                    {[
+                      { title: "Q3 Engineering Sync", score: "96%" },
+                      { title: "Product Roadmap Review", score: "88%" }
+                    ].map(s => (
+                      <span
+                        key={s.title}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer"
+                        style={{ background: "white", border: "1px solid var(--border)", color: "var(--ink-2)" }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = "var(--ink-4)";
+                          e.currentTarget.style.color = "var(--ink-1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "var(--border)";
+                          e.currentTarget.style.color = "var(--ink-2)";
+                        }}
+                      >
+                        <WaveformIcon size={10} />
+                        {s.title}
+                        <span style={{ color: "var(--ink-4)" }}>· {s.score}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Simulated Input Bar */}
+            <div 
+              className="mt-4 pt-4 flex items-center gap-3"
+              style={{ borderTop: "1px solid var(--border-mid)" }}
+            >
+              <div 
+                className="flex-1 h-12 rounded-full px-5 flex items-center text-[13px]"
+                style={{ background: "white", border: "1px solid var(--border)", color: "var(--ink-4)" }}
+              >
+                Ask a follow-up question...
+              </div>
+              <div 
+                className="flex-shrink-0 flex items-center justify-center rounded-full"
+                style={{ width: 48, height: 48, background: "var(--accent)", color: "var(--white)" }}
+              >
+                <ArrowRight size={18} strokeWidth={2} />
+              </div>
+            </div>
+
+          </div>
+        </motion.div>
+      </div>
     </section>
   );
 }
