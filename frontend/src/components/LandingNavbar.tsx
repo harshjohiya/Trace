@@ -1,13 +1,23 @@
-
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { WaveformIcon } from "./WaveformIcon";
 
 export function LandingNavbar() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <header
-      className="sticky top-0 z-40 h-20 flex items-center px-6 md:px-24 w-full"
+      className="sticky top-0 z-50 h-20 flex items-center px-6 md:px-24 w-full transition-all duration-300"
       style={{
-        background: "transparent",
+        background: scrolled ? "rgba(250, 246, 241, 0.9)" : "transparent",
+        backdropFilter: scrolled ? "blur(12px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+        borderBottom: scrolled ? "1px solid var(--border)" : "1px solid transparent",
       }}
     >
       <Link to="/" className="flex items-center gap-2">

@@ -121,9 +121,7 @@ function Hero() {
             See how it works
           </a>
         </motion.div>
-        <motion.div {...fade(0.5)} className="mt-6 text-[13px] font-medium" style={{ color: "var(--ink-3)" }}>
-          No account needed · Runs locally
-        </motion.div>
+
       </div>
 
       {/* Right Column (Card) */}
@@ -659,9 +657,6 @@ function Footer() {
           Trace
         </span>
         <span>Meeting Intelligence</span>
-      </div>
-      <div className="text-[13px]" style={{ color: "var(--ink-3)" }}>
-        Built with local AI · Your data never leaves
       </div>
     </footer>
   );

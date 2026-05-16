@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
@@ -27,6 +27,12 @@ type Sort = "newest" | "oldest" | "tasks";
 
 function MeetingsListPage() {
   usePageTitle("My Meetings — Trace");
+  const location = useLocation();
+
+  if (location.pathname !== "/meetings") {
+    return <Outlet />;
+  }
+
   return (
     <ConnectionGuard>
       <MeetingsList />
