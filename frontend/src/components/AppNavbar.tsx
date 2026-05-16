@@ -44,7 +44,7 @@ export function AppNavbar({ onUpload }: { onUpload?: () => void }) {
       </nav>
       <button
         onClick={onUpload}
-        className="inline-flex items-center gap-1.5 h-[34px] px-4 rounded-md text-[13px] font-semibold text-white transition-colors"
+        className="inline-flex items-center gap-1.5 h-[34px] px-4 rounded-md text-[13px] font-semibold transition-colors text-[var(--white)]"
         style={{ background: "var(--accent)" }}
         onMouseDown={(e) => (e.currentTarget.style.background = "var(--accent-hover)")}
         onMouseUp={(e) => (e.currentTarget.style.background = "var(--accent)")}

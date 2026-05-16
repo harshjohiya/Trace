@@ -91,8 +91,8 @@ function MeetingsList() {
                 onClick={() => setFilter(f)}
                 className="text-[13px] font-medium h-[30px] px-3.5 rounded-full transition-colors"
                 style={{
-                  background: filter === f ? "var(--accent)" : "white",
-                  color: filter === f ? "white" : "var(--ink-2)",
+                  background: filter === f ? "var(--accent)" : "var(--white)",
+                  color: filter === f ? "var(--white)" : "var(--ink-2)",
                   border: filter === f ? "1px solid var(--accent)" : "1px solid var(--border)",
                 }}
               >
@@ -210,7 +210,7 @@ function Row({ m, delay }: { m: Meeting; delay: number }) {
             initial={false}
             animate={{ opacity: hover ? 1 : 0 }}
             className="ml-2 inline-flex items-center h-[30px] px-3 rounded-md text-[13px] font-medium"
-            style={{ border: "1px solid var(--accent)", color: "var(--accent)", background: "white" }}
+            style={{ border: "1px solid var(--accent)", color: "var(--accent)", background: "var(--white)" }}
           >
             Open
           </motion.span>

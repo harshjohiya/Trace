@@ -36,7 +36,7 @@ export function QuickAskBar() {
       const r = await queryMeetings(q);
       setRes(r);
     } catch {
-      setRes({ answer: "Could not reach Trace.", confidence: "low", results: [], filter_type: null });
+      setRes({ answer: "Could not reach Trace.", confidence: "low", results: [], sources: [], filter_type: null });
     } finally {
       setLoading(false);
     }
@@ -162,7 +162,7 @@ export function QuickAskBar() {
             style={{ width: 32, height: 32, background: "var(--accent)" }}
             aria-label="Submit"
           >
-            <ArrowRight size={16} strokeWidth={1.5} color="white" />
+            <ArrowRight size={16} strokeWidth={1.5} color="var(--white)" />
           </button>
         </div>
       </div>

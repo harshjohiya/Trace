@@ -7,53 +7,53 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
 
 :root {
-  /* Trace palette */
-  --white: #ffffff;
-  --surface: #f7f7f9;
-  --surface-2: #efeff3;
-  --border: #e4e4eb;
-  --border-mid: #d0d0df;
+  /* Trace palette — Warm cream + black */
+  --white: #FAF6F1;
+  --surface: #F5EFE8;
+  --surface-2: #EDE5DB;
+  --border: #DDD5CA;
+  --border-mid: #C8BFAE;
 
-  --ink-1: #111116;
-  --ink-2: #44444f;
-  --ink-3: #888896;
-  --ink-4: #b8b8c8;
+  --ink-1: #1A1A1A;
+  --ink-2: #3D3D3D;
+  --ink-3: #7A756E;
+  --ink-4: #A8A29A;
 
-  --accent: #5b57f5;
-  --accent-hover: #4a46e0;
-  --accent-dim: #eeeeff;
-  --accent-mid: #c4c3fb;
+  --accent: #1A1A1A;
+  --accent-hover: #333333;
+  --accent-dim: #F0EBE4;
+  --accent-mid: #C8BFAE;
 
-  --green: #16a34a;
-  --green-dim: #f0fdf4;
-  --green-mid: #bbf7d0;
+  --green: #2D7D46;
+  --green-dim: #EFF8F0;
+  --green-mid: #B8DFBF;
 
-  --amber: #b45309;
-  --amber-dim: #fffbeb;
-  --amber-mid: #fde68a;
+  --amber: #A0620D;
+  --amber-dim: #FDF5E6;
+  --amber-mid: #F0D8A8;
 
-  --red: #dc2626;
-  --red-dim: #fef2f2;
-  --red-mid: #fecaca;
+  --red: #C53030;
+  --red-dim: #FDF0F0;
+  --red-mid: #F5C4C4;
 
-  --blue: #2563eb;
-  --blue-dim: #eff6ff;
-  --blue-mid: #bfdbfe;
+  --blue: #2B5EA7;
+  --blue-dim: #EDF3FB;
+  --blue-mid: #B8D0F0;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--border);
-  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--border-mid);
-  --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border);
+  --shadow-card: 0 1px 3px rgba(26, 26, 26, 0.04), 0 0 0 1px var(--border);
+  --shadow-lift: 0 4px 16px rgba(26, 26, 26, 0.07), 0 0 0 1px var(--border-mid);
+  --shadow-modal: 0 24px 48px rgba(26, 26, 26, 0.10), 0 0 0 1px var(--border);
 
   /* shadcn aliases (only what shadcn primitives need) */
   --radius: 0.5rem;
   --background: var(--white);
   --foreground: var(--ink-1);
-  --card: var(--white);
+  --card: #FFFCF8;
   --card-foreground: var(--ink-1);
-  --popover: var(--white);
+  --popover: #FFFCF8;
   --popover-foreground: var(--ink-1);
   --primary: var(--accent);
-  --primary-foreground: #ffffff;
+  --primary-foreground: #FAF6F1;
   --secondary: var(--surface);
   --secondary-foreground: var(--ink-1);
   --muted: var(--surface);
@@ -61,7 +61,7 @@
   --accent-bg: var(--surface);
   --accent-foreground: var(--ink-1);
   --destructive: var(--red);
-  --destructive-foreground: #ffffff;
+  --destructive-foreground: #FAF6F1;
   --input: var(--border);
   --ring: var(--accent);
 }
@@ -71,6 +71,8 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --color-white: var(--white);
+  /* Override Tailwind's built-in white so bg-white, text-white etc. use cream */
+  --color-black: #1A1A1A;
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-border: var(--border);

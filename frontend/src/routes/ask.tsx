@@ -92,6 +92,7 @@ function Ask() {
                   answer: "Could not reach Trace.",
                   confidence: "low",
                   results: [],
+                  sources: [],
                   filter_type: null,
                 },
                 loading: false,
@@ -206,7 +207,7 @@ function Ask() {
                   style={{ width: 32, height: 32, background: "var(--accent)" }}
                   aria-label="Submit"
                 >
-                  <ArrowRight size={16} strokeWidth={1.5} color="white" />
+                  <ArrowRight size={16} strokeWidth={1.5} color="var(--white)" />
                 </button>
               </div>
               <div className="mt-3 flex gap-2">
@@ -216,8 +217,8 @@ function Ask() {
                     onClick={() => setFilter(f.key)}
                     className="text-[12px] font-medium h-7 px-3 rounded-full"
                     style={{
-                      background: filter === f.key ? "var(--accent)" : "white",
-                      color: filter === f.key ? "white" : "var(--ink-2)",
+                      background: filter === f.key ? "var(--accent)" : "var(--white)",
+                      color: filter === f.key ? "var(--white)" : "var(--ink-2)",
                       border: filter === f.key ? "1px solid var(--accent)" : "1px solid var(--border)",
                     }}
                   >
@@ -375,14 +376,14 @@ function QAPair({ item }: { item: QAItem }) {
             <p className="text-[14px] whitespace-pre-wrap" style={{ color: "var(--ink-1)", lineHeight: 1.75 }}>
               {typed}
             </p>
-            {(item.res?.results.length ?? 0) > 0 && (
+            {((item.res?.results ?? []).length > 0 || (item.res?.sources ?? []).length > 0) && (
               <div className="mt-4">
                 <button
                   onClick={() => setSourcesOpen((s) => !s)}
                   className="inline-flex items-center gap-1 text-[12px] font-medium"
                   style={{ color: "var(--ink-3)" }}
                 >
-                  {item.res!.results.length} sources
+                  {(item.res!.results?.length || 0) + (item.res!.sources?.length || 0)} sources
                   <ChevronDown size={12} strokeWidth={1.5} style={{ transform: sourcesOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                 </button>
                 <AnimatePresence>
@@ -394,9 +395,9 @@ function QAPair({ item }: { item: QAItem }) {
                       className="overflow-hidden"
                     >
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {item.res!.results.map((r, i) => (
+                        {(item.res!.results ?? []).map((r, i) => (
                           <span
-                            key={i}
+                            key={`result-${i}`}
                             className="inline-flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-full"
                             style={{
                               background: "var(--surface)",
@@ -409,8 +410,26 @@ function QAPair({ item }: { item: QAItem }) {
                               · {r.meeting_type}
                             </span>
                             <span className="font-mono text-[11px]" style={{ color: "var(--ink-3)" }}>
-                              {Math.round(r.relevance_score * 100)}%
+                              {Math.round((r.relevance_score ?? 0) * 100)}%
                             </span>
+                          </span>
+                        ))}
+                        {(item.res!.sources ?? []).map((s, i) => (
+                          <span
+                            key={`source-${i}`}
+                            className="inline-flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-full"
+                            style={{
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
+                              color: "var(--ink-2)",
+                            }}
+                          >
+                            {s.meeting_title ?? "Source"}
+                            {s.meeting_type && (
+                              <span className="text-[11px] capitalize" style={{ color: "var(--ink-3)" }}>
+                                · {s.meeting_type}
+                              </span>
+                            )}
                           </span>
                         ))}
                       </div>

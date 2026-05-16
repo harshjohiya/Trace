@@ -49,6 +49,7 @@ export interface QueryResponse {
   answer: string;
   confidence: "high" | "medium" | "low";
   results: QueryResult[];
+  sources: { meeting_title?: string; meeting_type?: string; relevance_score?: number; text?: string }[];
   filter_type: string | null;
 }
 export interface JobStatus {
@@ -228,4 +229,15 @@ export const getJobStatus = (jobId: string) =>
 export const queryMeetings = (question: string, filter_type?: string) =>
   api
     .post<QueryResponse>("/query", { question, filter_type: filter_type ?? null })
-    .then((r) => r.data);
+    .then((r) => {
+      const data = r.data;
+      // Normalize: backend returns 'sources' for RAG queries, 'results' for filtered queries
+      return {
+        ...data,
+        answer: data.answer ?? "",
+        confidence: data.confidence ?? "low",
+        results: data.results ?? [],
+        sources: data.sources ?? [],
+        filter_type: data.filter_type ?? null,
+      };
+    });

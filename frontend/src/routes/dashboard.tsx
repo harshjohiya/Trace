@@ -241,7 +241,7 @@ function MeetingCard({ m, delay }: { m: Meeting; delay?: number }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="absolute bottom-4 right-4 text-[13px] font-medium px-3 py-1 rounded-md"
-            style={{ border: "1px solid var(--accent)", color: "var(--accent)", background: "white" }}
+            style={{ border: "1px solid var(--accent)", color: "var(--accent)", background: "var(--white)" }}
           >
             Open meeting
           </motion.div>

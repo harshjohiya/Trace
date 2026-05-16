@@ -76,7 +76,7 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
                     width: 32,
                     height: 32,
                     background: state === "done" ? "var(--green)" : "white",
-                    color: state === "done" ? "white" : state === "active" ? "var(--accent)" : "var(--ink-3)",
+                    color: state === "done" ? "var(--white)" : state === "active" ? "var(--accent)" : "var(--ink-3)",
                     border:
                       state === "done"
                         ? "1px solid var(--green)"

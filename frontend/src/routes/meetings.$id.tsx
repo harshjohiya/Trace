@@ -489,8 +489,8 @@ function ActionsTab({ m }: { m: Meeting }) {
             onClick={() => setFilter(o)}
             className="text-[13px] font-medium h-[30px] px-3.5 rounded-full"
             style={{
-              background: filter === o ? "var(--accent)" : "white",
-              color: filter === o ? "white" : "var(--ink-2)",
+              background: filter === o ? "var(--accent)" : "var(--white)",
+              color: filter === o ? "var(--white)" : "var(--ink-2)",
               border: filter === o ? "1px solid var(--accent)" : "1px solid var(--border)",
             }}
           >

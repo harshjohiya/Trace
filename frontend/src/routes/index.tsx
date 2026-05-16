@@ -64,77 +64,90 @@ function LandingPage() {
 
 function Hero() {
   return (
-    <section className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center px-6 pt-12 pb-20">
-      <div className="text-center" style={{ maxWidth: 720 }}>
-        <motion.div {...fade(0)} className="flex justify-center mb-6">
-          <WaveformIcon size={48} />
-        </motion.div>
+    <section className="min-h-[calc(100vh-56px)] flex flex-col md:flex-row items-center justify-between px-6 md:px-24 pt-12 pb-20 max-w-[1400px] mx-auto gap-12">
+      {/* Left Column */}
+      <div className="flex-1 max-w-[540px]">
         <motion.div
-          {...fade(0.1)}
-          className="text-[11px] font-medium uppercase mb-6"
-          style={{ letterSpacing: "0.1em", color: "var(--ink-3)" }}
+          {...fade(0)}
+          className="text-[12px] font-semibold uppercase mb-8 inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
+          style={{ letterSpacing: "0.1em", color: "var(--ink-2)", background: "var(--surface)" }}
         >
-          Meeting Intelligence
+          <WaveformIcon size={14} />
+          Trace Meeting Intelligence
         </motion.div>
+        
         <motion.h1
-          {...fade(0.2)}
-          className="font-extrabold"
+          {...fade(0.1)}
+          className="font-bold tracking-tighter"
           style={{
-            fontSize: "clamp(40px, 8vw, 68px)",
-            lineHeight: 1.0,
+            fontSize: "clamp(56px, 8vw, 84px)",
+            lineHeight: 1.05,
             letterSpacing: "-0.04em",
             color: "var(--ink-1)",
           }}
         >
-          Every meeting.
-          <br />
-          Every decision. <span style={{ color: "var(--accent)" }}>Nothing lost.</span>
+          Every meeting.<br />
+          Every decision.<br />
+          <span style={{ color: "var(--ink-3)" }}>Nothing lost.</span>
         </motion.h1>
+        
         <motion.p
-          {...fade(0.4)}
-          className="mx-auto mt-6 text-[18px] leading-[1.65]"
-          style={{ maxWidth: 560, color: "var(--ink-2)" }}
+          {...fade(0.2)}
+          className="mt-8 text-[20px] font-medium leading-[1.4]"
+          style={{ color: "var(--ink-2)", maxWidth: "90%" }}
         >
-          Upload a recording — Trace transcribes every word, identifies each speaker, and surfaces
-          every action item, decision, and blocker. Then you can ask it anything.
+          Upload a recording — Trace transcribes every word, identifies each speaker, and surfaces every action item, decision, and blocker.
         </motion.p>
-        <motion.div {...fade(0.5)} className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        
+        <motion.div {...fade(0.4)} className="mt-10 flex flex-wrap gap-4">
           <Link
             to="/dashboard"
-            className="group inline-flex items-center gap-2 h-11 px-6 rounded-md text-[15px] font-semibold text-white transition-all"
+            className="group inline-flex items-center gap-2 h-12 px-6 rounded-[8px] text-[15px] font-semibold text-white transition-all transform hover:-translate-y-0.5"
             style={{ background: "var(--accent)" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "var(--accent-hover)";
-              e.currentTarget.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "var(--accent)";
-              e.currentTarget.style.transform = "translateY(0)";
-            }}
           >
             Upload your first meeting
-            <ArrowRight size={16} strokeWidth={1.5} />
+            <ArrowRight size={16} strokeWidth={2} color="var(--white)" />
           </Link>
           <a
             href="#how-it-works"
-            className="inline-flex items-center h-11 px-6 rounded-md text-[15px] font-medium transition-colors bg-white"
-            style={{ border: "1px solid var(--border-mid)", color: "var(--ink-2)" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--accent-mid)";
-              e.currentTarget.style.color = "var(--accent)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--border-mid)";
-              e.currentTarget.style.color = "var(--ink-2)";
+            className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[8px] text-[15px] font-semibold transition-all"
+            style={{ 
+              background: "transparent",
+              border: "1px solid var(--border-mid)",
+              color: "var(--ink-1)"
             }}
           >
             See how it works
           </a>
         </motion.div>
-        <motion.div {...fade(0.65)} className="mt-8 text-[13px]" style={{ color: "var(--ink-3)" }}>
-          No account needed · Runs locally · Your data stays yours
+        <motion.div {...fade(0.5)} className="mt-6 text-[13px] font-medium" style={{ color: "var(--ink-3)" }}>
+          No account needed · Runs locally
         </motion.div>
       </div>
+
+      {/* Right Column (Card) */}
+      <motion.div
+        {...fade(0.2)}
+        className="flex-1 w-full"
+      >
+        <div 
+          className="rounded-[24px] p-10 md:p-14 h-full flex flex-col justify-center min-h-[400px] transition-shadow shadow-sm hover:shadow-md"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <h2 
+            className="font-bold tracking-tight mb-6"
+            style={{ fontSize: "clamp(28px, 4vw, 36px)", lineHeight: 1.15, color: "var(--ink-1)" }}
+          >
+            Ask anything about your meeting history
+          </h2>
+          <p 
+            className="text-[17px] leading-[1.65] font-medium"
+            style={{ color: "var(--ink-3)" }}
+          >
+            Trace acts as an intelligent memory for your team. Use natural language to search across all your past meetings to pull exact quotes, check assigned tasks, or recall context you forgot.
+          </p>
+        </div>
+      </motion.div>
     </section>
   );
 }
