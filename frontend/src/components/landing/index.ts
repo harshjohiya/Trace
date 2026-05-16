@@ -1,5 +1,0 @@
-export * from "./features-section"
-export * from "./final-cta-section"
-export * from "./hero-section"
-export * from "./how-it-works-section"
-export * from "./use-cases-section"

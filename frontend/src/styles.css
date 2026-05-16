@@ -1,0 +1,152 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  /* Trace palette */
+  --white: #ffffff;
+  --surface: #f7f7f9;
+  --surface-2: #efeff3;
+  --border: #e4e4eb;
+  --border-mid: #d0d0df;
+
+  --ink-1: #111116;
+  --ink-2: #44444f;
+  --ink-3: #888896;
+  --ink-4: #b8b8c8;
+
+  --accent: #5b57f5;
+  --accent-hover: #4a46e0;
+  --accent-dim: #eeeeff;
+  --accent-mid: #c4c3fb;
+
+  --green: #16a34a;
+  --green-dim: #f0fdf4;
+  --green-mid: #bbf7d0;
+
+  --amber: #b45309;
+  --amber-dim: #fffbeb;
+  --amber-mid: #fde68a;
+
+  --red: #dc2626;
+  --red-dim: #fef2f2;
+  --red-mid: #fecaca;
+
+  --blue: #2563eb;
+  --blue-dim: #eff6ff;
+  --blue-mid: #bfdbfe;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--border);
+  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--border-mid);
+  --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border);
+
+  /* shadcn aliases (only what shadcn primitives need) */
+  --radius: 0.5rem;
+  --background: var(--white);
+  --foreground: var(--ink-1);
+  --card: var(--white);
+  --card-foreground: var(--ink-1);
+  --popover: var(--white);
+  --popover-foreground: var(--ink-1);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface);
+  --secondary-foreground: var(--ink-1);
+  --muted: var(--surface);
+  --muted-foreground: var(--ink-3);
+  --accent-bg: var(--surface);
+  --accent-foreground: var(--ink-1);
+  --destructive: var(--red);
+  --destructive-foreground: #ffffff;
+  --input: var(--border);
+  --ring: var(--accent);
+}
+
+@theme inline {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-white: var(--white);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-mid: var(--border-mid);
+  --color-ink-1: var(--ink-1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-accent-mid: var(--accent-mid);
+  --color-green: var(--green);
+  --color-green-dim: var(--green-dim);
+  --color-green-mid: var(--green-mid);
+  --color-amber: var(--amber);
+  --color-amber-dim: var(--amber-dim);
+  --color-amber-mid: var(--amber-mid);
+  --color-red: var(--red);
+  --color-red-dim: var(--red-dim);
+  --color-red-mid: var(--red-mid);
+  --color-blue: var(--blue);
+  --color-blue-dim: var(--blue-dim);
+  --color-blue-mid: var(--blue-mid);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html,
+  body {
+    background-color: var(--white);
+    color: var(--ink-1);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--surface);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-mid);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
