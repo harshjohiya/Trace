@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   Upload,
@@ -274,54 +275,42 @@ const meetingApps: { name: string; color: string; logo: string | React.ReactNode
   {
     name: "Zoom",
     color: "#0B5CFF",
-    logo: (
-      <svg viewBox="0 0 24 24" width="36" height="36" fill="#0B5CFF">
-        <path d="M24 12v4.8a2.4 2.4 0 0 1-2.4 2.4H11.28L16.8 24v-4.8H4.8A2.4 2.4 0 0 1 2.4 16.8V7.2A2.4 2.4 0 0 1 4.8 4.8h16.8A2.4 2.4 0 0 1 24 7.2V12ZM1.2 15.6V6a3.6 3.6 0 0 1 3.6-3.6h13.2a1.2 1.2 0 0 0-1.2-1.2H2.4A2.4 2.4 0 0 0 0 3.6v12a1.2 1.2 0 0 0 1.2 0Z" />
-      </svg>
-    ),
+    logo: "/logos/zoom.jpg",
   },
   {
     name: "Google Meet",
     color: "#00897B",
-    logo: "/logos/google-meet.png",
+    logo: "/logos/google-meet.jpg",
   },
   {
     name: "Microsoft Teams",
     color: "#6264A7",
-    logo: "/logos/microsoft-teams.png",
+    logo: "/logos/microsoft-teams.jpg",
   },
   {
     name: "Slack",
     color: "#4A154B",
-    logo: "/logos/slack.png",
+    logo: "/logos/slack.jpg",
   },
   {
     name: "Webex",
     color: "#049FD9",
-    logo: "/logos/webex.png",
+    logo: "/logos/webex.jpg",
   },
   {
     name: "Discord",
     color: "#5865F2",
-    logo: (
-      <svg viewBox="0 0 24 24" width="36" height="36" fill="#5865F2">
-        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03ZM8.02 15.33c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.946 2.418-2.157 2.418Z" />
-      </svg>
-    ),
+    logo: "/logos/discord.jpg",
   },
   {
     name: "GoTo Meeting",
     color: "#F68D2E",
-    logo: (
-      <svg viewBox="0 0 24 24" width="36" height="36" fill="#F68D2E">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Zm0 3.5a3.25 3.25 0 1 1 0 6.5 3.25 3.25 0 0 1 0-6.5Zm0 14.5c-2.73 0-5.14-1.39-6.56-3.5.03-2.17 4.37-3.36 6.56-3.36 2.18 0 6.53 1.19 6.56 3.36A8.468 8.468 0 0 1 12 20Z" />
-      </svg>
-    ),
+    logo: "/logos/gotomeeting.jpg",
   },
   {
     name: "Skype",
     color: "#00AFF0",
-    logo: "/logos/skype.png",
+    logo: "/logos/skype.jpg",
   },
 ];
 
@@ -458,13 +447,149 @@ function Integrations() {
   );
 }
 
+/* ──────────────────────────────────────────────────────── */
+/* AskTraceOverview — Animated typing demo                  */
+/* ──────────────────────────────────────────────────────── */
+
+const ASK_QUESTION = "What did Sarah say about the Q3 shipping timeline and what are the current blockers?";
+const ASK_ANSWER = "Based on recent meetings, Sarah stated that the Q3 shipping timeline is currently delayed by two weeks.\n\nThe primary blockers identified are:\n• DevOps has not yet provisioned the staging environment for QA testing.\n• The new authentication module is causing unexpected rate-limiting errors on retry paths.";
+const ASK_SOURCES = [
+  { title: "Q3 Engineering Sync", score: "96%" },
+  { title: "Product Roadmap Review", score: "88%" },
+];
+
+// Animation phases
+const PHASE_TYPING_Q = 0;   // Typing question in input bar
+const PHASE_SENT = 1;       // Question appears as chat bubble
+const PHASE_THINKING = 2;   // "Thinking" dots
+const PHASE_TYPING_A = 3;   // Answer types out
+const PHASE_SOURCES = 4;    // Sources fade in
+const PHASE_DONE = 5;       // Pause before loop
+
 function AskTraceOverview() {
+  const [phase, setPhase] = useState(-1); // -1 = not started
+  const [typedQ, setTypedQ] = useState("");
+  const [typedA, setTypedA] = useState("");
+  const [showSources, setShowSources] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const hasStarted = useRef(false);
+
+  // Reset all state for a new cycle
+  const resetCycle = useCallback(() => {
+    setTypedQ("");
+    setTypedA("");
+    setShowSources(false);
+    setPhase(PHASE_TYPING_Q);
+  }, []);
+
+  // Start animation when section scrolls into view
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasStarted.current) {
+          hasStarted.current = true;
+          resetCycle();
+        }
+      },
+      { threshold: 0.3 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [resetCycle]);
+
+  // Phase: type question character by character
+  useEffect(() => {
+    if (phase !== PHASE_TYPING_Q) return;
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setTypedQ(ASK_QUESTION.slice(0, i));
+      if (i >= ASK_QUESTION.length) {
+        clearInterval(id);
+        setTimeout(() => setPhase(PHASE_SENT), 400);
+      }
+    }, 35);
+    return () => clearInterval(id);
+  }, [phase]);
+
+  // Phase: sent → show thinking after brief pause
+  useEffect(() => {
+    if (phase !== PHASE_SENT) return;
+    const id = setTimeout(() => setPhase(PHASE_THINKING), 600);
+    return () => clearTimeout(id);
+  }, [phase]);
+
+  // Phase: thinking → start typing answer
+  useEffect(() => {
+    if (phase !== PHASE_THINKING) return;
+    const id = setTimeout(() => setPhase(PHASE_TYPING_A), 1500);
+    return () => clearTimeout(id);
+  }, [phase]);
+
+  // Phase: type answer character by character
+  useEffect(() => {
+    if (phase !== PHASE_TYPING_A) return;
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setTypedA(ASK_ANSWER.slice(0, i));
+      if (i >= ASK_ANSWER.length) {
+        clearInterval(id);
+        setTimeout(() => setPhase(PHASE_SOURCES), 300);
+      }
+    }, 18);
+    return () => clearInterval(id);
+  }, [phase]);
+
+  // Phase: show sources → done
+  useEffect(() => {
+    if (phase !== PHASE_SOURCES) return;
+    setShowSources(true);
+    const id = setTimeout(() => setPhase(PHASE_DONE), 2000);
+    return () => clearTimeout(id);
+  }, [phase]);
+
+  // Phase: done → restart loop
+  useEffect(() => {
+    if (phase !== PHASE_DONE) return;
+    const id = setTimeout(() => resetCycle(), 4000);
+    return () => clearTimeout(id);
+  }, [phase, resetCycle]);
+
+  // Helper: render the answer with formatting
+  const renderAnswer = (text: string) => {
+    const lines = text.split("\n");
+    return lines.map((line, i) => {
+      if (line.startsWith("• ")) {
+        return (
+          <div key={i} className="flex items-start gap-2 ml-1" style={{ color: "var(--ink-2)" }}>
+            <span className="mt-[2px] flex-shrink-0" style={{ color: "var(--ink-3)" }}>•</span>
+            <span>{line.slice(2)}</span>
+          </div>
+        );
+      }
+      if (line === "") return <div key={i} className="h-2" />;
+      // Bold "two weeks"
+      const boldified = line.replace(
+        "two weeks",
+        "<strong>two weeks</strong>"
+      );
+      return <div key={i} dangerouslySetInnerHTML={{ __html: boldified }} />;
+    });
+  };
+
+  const showQuestion = phase >= PHASE_SENT;
+  const showThinking = phase === PHASE_THINKING;
+  const showAnswer = phase >= PHASE_TYPING_A;
+
   return (
-    <section className="px-6 py-24" style={{ background: "var(--white)" }}>
-      <SectionHeader 
-        eyebrow="Conversational Memory" 
-        title="Chat with your entire meeting history" 
-        sub="Don't spend hours scrubbing through recordings. Ask Trace directly." 
+    <section ref={sectionRef} className="px-6 py-24" style={{ background: "var(--white)" }}>
+      <SectionHeader
+        eyebrow="Conversational Memory"
+        title="Chat with your entire meeting history"
+        sub="Don't spend hours scrubbing through recordings. Ask Trace directly."
       />
       <div className="mx-auto" style={{ maxWidth: 760 }}>
         <motion.div
@@ -473,89 +598,176 @@ function AskTraceOverview() {
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5 }}
           className="rounded-[20px] p-6 md:p-10"
-          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          style={{ background: "var(--surface)", border: "1px solid var(--border)", minHeight: 420 }}
         >
-          {/* Chat Container */}
           <div className="flex flex-col gap-6">
-            
-            {/* User Message */}
-            <div className="self-end max-w-[85%] sm:max-w-[70%]">
-              <div 
-                className="px-5 py-3.5 rounded-2xl rounded-tr-sm text-[14px] leading-[1.6] shadow-sm"
-                style={{ background: "var(--accent)", color: "var(--white)" }}
-              >
-                What did Sarah say about the Q3 shipping timeline and what are the current blockers?
-              </div>
-            </div>
 
-            {/* Trace Response */}
-            <div className="self-start max-w-[90%] sm:max-w-[80%]">
-              <div className="flex gap-3 mb-2 px-1">
-                <div 
-                  className="flex-shrink-0 flex items-center justify-center rounded-full mt-1"
-                  style={{ width: 28, height: 28, background: "var(--ink-1)", color: "var(--white)" }}
+            {/* User Message (appears after typing finishes) */}
+            <AnimatePresence>
+              {showQuestion && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="self-end max-w-[85%] sm:max-w-[70%]"
                 >
-                  <WaveformIcon size={14} />
-                </div>
-                <div>
-                  <div 
-                    className="px-5 py-4 rounded-2xl rounded-tl-sm text-[14px] leading-[1.65] shadow-sm bg-white"
-                    style={{ border: "1px solid var(--border)", color: "var(--ink-1)" }}
+                  <div
+                    className="px-5 py-3.5 rounded-2xl rounded-tr-sm text-[14px] leading-[1.6] shadow-sm"
+                    style={{ background: "var(--accent)", color: "var(--white)" }}
                   >
-                    Based on recent meetings, Sarah stated that the Q3 shipping timeline is currently delayed by <strong>two weeks</strong>. <br/><br/>
-                    The primary blockers identified are:
-                    <ul className="list-disc pl-5 mt-2 space-y-1.5" style={{ color: "var(--ink-2)" }}>
-                      <li>DevOps has not yet provisioned the staging environment for QA testing.</li>
-                      <li>The new authentication module is causing unexpected rate-limiting errors on retry paths.</li>
-                    </ul>
+                    {ASK_QUESTION}
                   </div>
-                  
-                  {/* Sources attached to response */}
-                  <div className="flex flex-wrap gap-2 mt-3 ml-1">
-                    {[
-                      { title: "Q3 Engineering Sync", score: "96%" },
-                      { title: "Product Roadmap Review", score: "88%" }
-                    ].map(s => (
-                      <span
-                        key={s.title}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer"
-                        style={{ background: "white", border: "1px solid var(--border)", color: "var(--ink-2)" }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = "var(--ink-4)";
-                          e.currentTarget.style.color = "var(--ink-1)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = "var(--border)";
-                          e.currentTarget.style.color = "var(--ink-2)";
-                        }}
-                      >
-                        <WaveformIcon size={10} />
-                        {s.title}
-                        <span style={{ color: "var(--ink-4)" }}>· {s.score}</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            {/* Simulated Input Bar */}
-            <div 
+            {/* Thinking Indicator */}
+            <AnimatePresence>
+              {showThinking && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.25 }}
+                  className="self-start"
+                >
+                  <div className="flex gap-3 px-1">
+                    <div
+                      className="flex-shrink-0 flex items-center justify-center rounded-full"
+                      style={{ width: 28, height: 28, background: "var(--ink-1)", color: "var(--white)" }}
+                    >
+                      <WaveformIcon size={14} />
+                    </div>
+                    <div
+                      className="px-5 py-4 rounded-2xl rounded-tl-sm shadow-sm bg-white flex items-center gap-1.5"
+                      style={{ border: "1px solid var(--border)" }}
+                    >
+                      {[0, 1, 2].map((dot) => (
+                        <motion.span
+                          key={dot}
+                          className="inline-block rounded-full"
+                          style={{ width: 7, height: 7, background: "var(--ink-4)" }}
+                          animate={{ opacity: [0.3, 1, 0.3], scale: [0.85, 1.1, 0.85] }}
+                          transition={{
+                            duration: 1.2,
+                            repeat: Infinity,
+                            delay: dot * 0.2,
+                            ease: "easeInOut",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Trace Response (types out) */}
+            <AnimatePresence>
+              {showAnswer && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.35 }}
+                  className="self-start max-w-[90%] sm:max-w-[80%]"
+                >
+                  <div className="flex gap-3 mb-2 px-1">
+                    <div
+                      className="flex-shrink-0 flex items-center justify-center rounded-full mt-1"
+                      style={{ width: 28, height: 28, background: "var(--ink-1)", color: "var(--white)" }}
+                    >
+                      <WaveformIcon size={14} />
+                    </div>
+                    <div>
+                      <div
+                        className="px-5 py-4 rounded-2xl rounded-tl-sm text-[14px] leading-[1.65] shadow-sm bg-white"
+                        style={{ border: "1px solid var(--border)", color: "var(--ink-1)" }}
+                      >
+                        {renderAnswer(typedA)}
+                        {/* Blinking cursor while typing */}
+                        {phase === PHASE_TYPING_A && (
+                          <motion.span
+                            className="inline-block ml-0.5"
+                            style={{ width: 2, height: 16, background: "var(--ink-1)", verticalAlign: "text-bottom" }}
+                            animate={{ opacity: [1, 0] }}
+                            transition={{ duration: 0.6, repeat: Infinity }}
+                          />
+                        )}
+                      </div>
+
+                      {/* Sources */}
+                      <AnimatePresence>
+                        {showSources && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="flex flex-wrap gap-2 mt-3 ml-1"
+                          >
+                            {ASK_SOURCES.map((s) => (
+                              <span
+                                key={s.title}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer"
+                                style={{ background: "white", border: "1px solid var(--border)", color: "var(--ink-2)" }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.borderColor = "var(--ink-4)";
+                                  e.currentTarget.style.color = "var(--ink-1)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.borderColor = "var(--border)";
+                                  e.currentTarget.style.color = "var(--ink-2)";
+                                }}
+                              >
+                                <WaveformIcon size={10} />
+                                {s.title}
+                                <span style={{ color: "var(--ink-4)" }}>· {s.score}</span>
+                              </span>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Input Bar — shows typing animation in phase 0 */}
+            <div
               className="mt-4 pt-4 flex items-center gap-3"
               style={{ borderTop: "1px solid var(--border-mid)" }}
             >
-              <div 
+              <div
                 className="flex-1 h-12 rounded-full px-5 flex items-center text-[13px]"
-                style={{ background: "white", border: "1px solid var(--border)", color: "var(--ink-4)" }}
+                style={{ background: "white", border: "1px solid var(--border)", color: phase === PHASE_TYPING_Q ? "var(--ink-1)" : "var(--ink-4)" }}
               >
-                Ask a follow-up question...
+                {phase === PHASE_TYPING_Q ? (
+                  <>
+                    <span>{typedQ}</span>
+                    <motion.span
+                      className="inline-block ml-0.5"
+                      style={{ width: 2, height: 16, background: "var(--ink-1)", verticalAlign: "text-bottom" }}
+                      animate={{ opacity: [1, 0] }}
+                      transition={{ duration: 0.53, repeat: Infinity }}
+                    />
+                  </>
+                ) : (
+                  "Ask a follow-up question..."
+                )}
               </div>
-              <div 
-                className="flex-shrink-0 flex items-center justify-center rounded-full"
+              <motion.div
+                className="flex-shrink-0 flex items-center justify-center rounded-full cursor-pointer"
                 style={{ width: 48, height: 48, background: "var(--accent)", color: "var(--white)" }}
+                animate={{
+                  scale: phase === PHASE_TYPING_Q && typedQ.length === ASK_QUESTION.length ? [1, 1.12, 1] : 1,
+                }}
+                transition={{ duration: 0.3 }}
               >
                 <ArrowRight size={18} strokeWidth={2} />
-              </div>
+              </motion.div>
             </div>
 
           </div>
