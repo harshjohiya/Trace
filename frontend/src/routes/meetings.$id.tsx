@@ -300,7 +300,7 @@ function SummaryTab({ m }: { m: Meeting }) {
                   <AlertTriangle size={14} strokeWidth={1.5} style={{ color: "var(--red)", flexShrink: 0, marginTop: 2 }} />
                   <div>
                     <p className="text-[13px] font-medium" style={{ color: "#7f1d1d" }}>
-                      {b.issue}
+                      {b.blocker}
                     </p>
                     {b.raised_by && (
                       <p className="text-[12px] mt-1" style={{ color: "#991b1b" }}>

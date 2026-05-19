@@ -15,7 +15,7 @@ export interface Decision {
   made_by: string | null;
 }
 export interface Blocker {
-  issue: string;
+  blocker: string;
   raised_by: string | null;
 }
 export interface Meeting {
@@ -114,9 +114,9 @@ function mapMeetingSummary(raw: BackendMeetingSummary): Meeting {
     decisions: typeof raw.decisions === "number"
       ? Array(raw.decisions).fill({ decision: "", made_by: null })
       : raw.decisions || [],
-    blockers: typeof raw.blockers === "number"
-      ? Array(raw.blockers).fill({ issue: "", raised_by: null })
-      : raw.blockers || [],
+    blockers: typeof raw.blockers === "number" 
+      ? Array(raw.blockers).fill({ blocker: "", raised_by: null })
+      : (raw.blockers || []),
     summary: "",
     key_topics: [],
     status: "complete",
@@ -203,7 +203,7 @@ export const getMeeting = (id: string) =>
 
 export const getTranscript = (id: string) =>
   withRetry(() =>
-    api.get<TranscriptSegment[]>(`/meetings/${id}/transcript`).then((r) => r.data)
+    api.get<{ segments: TranscriptSegment[] }>(`/meetings/${id}/transcript`).then((r) => r.data.segments)
   );
 
 export const deleteMeeting = (id: string) =>
