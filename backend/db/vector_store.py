@@ -24,10 +24,10 @@ class VectorStore:
             settings=Settings(
                 anonymized_telemetry=False,
                 chroma_product_telemetry_impl=(
-                    "backend.db.chroma_noop_telemetry.NoOpProductTelemetry"
+                    "db.chroma_noop_telemetry.NoOpProductTelemetry"
                 ),
                 chroma_telemetry_impl=(
-                    "backend.db.chroma_noop_telemetry.NoOpProductTelemetry"
+                    "db.chroma_noop_telemetry.NoOpProductTelemetry"
                 )
             )
         )
