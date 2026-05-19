@@ -43,15 +43,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from backend.ingestion.audio_processor import AudioProcessor
-from backend.ingestion.transcriber import Transcriber
-from backend.rag.extractor import MeetingExtractor
-from backend.db.vector_store import VectorStore
-from backend.rag.query_engine import MeetingQueryEngine
-from backend.core.config import config
-from backend.db.database import Base, engine
-from backend.api.auth import router as auth_router, get_current_user
-from backend.models.user import User
+from ingestion.audio_processor import AudioProcessor
+from ingestion.transcriber import Transcriber
+from rag.extractor import MeetingExtractor
+from db.vector_store import VectorStore
+from rag.query_engine import MeetingQueryEngine
+from core.config import config
+from db.database import Base, engine
+from api.auth import router as auth_router, get_current_user
+from models.user import User
 from fastapi import Depends
 
 # ── App setup ────────────────────────────────────────────

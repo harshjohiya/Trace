@@ -1,6 +1,6 @@
 import json
-from backend.ingestion.audio_processor import AudioProcessor
-from backend.ingestion.transcriber import Transcriber
+from ingestion.audio_processor import AudioProcessor
+from ingestion.transcriber import Transcriber
 
 TEST_FILE  = "data/audio/audio 1.mp3"
 MEETING_ID = "test_meeting_001"

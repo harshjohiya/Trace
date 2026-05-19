@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 
-from backend.db.database import get_db
-from backend.models.user import User
-from backend.core.security import (
+from db.database import get_db
+from models.user import User
+from core.security import (
     verify_password,
     get_password_hash,
     create_access_token,
@@ -66,7 +66,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
 
 from fastapi.security import OAuth2PasswordBearer
 import jwt
-from backend.core.security import SECRET_KEY, ALGORITHM
+from core.security import SECRET_KEY, ALGORITHM
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 

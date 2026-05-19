@@ -7,8 +7,8 @@ from groq import Groq
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
-from backend.core.config import config
-from backend.rag.prompts import (
+from core.config import config
+from rag.prompts import (
     EXTRACTION_SYSTEM_PROMPT,
     CHUNK_EXTRACTION_PROMPT,
     AGGREGATION_PROMPT,

@@ -1,7 +1,7 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from backend.core.config import config
+from core.config import config
 
 # We use SQLite by default to make it easy to run
 SQLALCHEMY_DATABASE_URL = "sqlite:///./data/trace.db"

@@ -1,6 +1,6 @@
 import json
-from backend.db.vector_store import VectorStore
-from backend.rag.query_engine import MeetingQueryEngine
+from db.vector_store import VectorStore
+from rag.query_engine import MeetingQueryEngine
 
 print("=" * 55)
 print("INDEXING MEETING DATA INTO VECTOR DB")

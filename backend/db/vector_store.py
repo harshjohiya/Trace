@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 from chromadb.config import Settings
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
-from backend.core.config import config
+from core.config import config
 
 
 class VectorStore:

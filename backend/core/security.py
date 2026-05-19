@@ -3,7 +3,7 @@ from typing import Optional
 from passlib.context import CryptContext
 import jwt
 
-from backend.core.config import config
+from core.config import config
 
 SECRET_KEY = config.SECRET_KEY
 ALGORITHM = "HS256"

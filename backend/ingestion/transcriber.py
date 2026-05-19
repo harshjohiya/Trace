@@ -2,7 +2,7 @@ from groq import Groq
 import json
 from pathlib import Path
 from datetime import datetime
-from backend.core.config import config
+from core.config import config
 
 
 class Transcriber:
