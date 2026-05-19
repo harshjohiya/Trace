@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: trace-backend
+    env: docker
+    rootDir: backend
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    plan: free # Can be updated to starter/standard if needed
+    disk:
+      name: trace-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
