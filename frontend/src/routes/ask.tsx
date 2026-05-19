@@ -11,7 +11,7 @@ import {
   Search,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AppNavbar } from "@/components/AppNavbar";
+import { AppLayout } from "@/components/AppLayout";
 import { ConnectionGuard } from "@/components/ConnectionGuard";
 import { WaveformIcon } from "@/components/WaveformIcon";
 import { queryMeetings, type QueryResponse } from "@/lib/api";
@@ -108,9 +108,8 @@ function Ask() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <AppNavbar />
-      <div className="flex-1 flex" style={{ height: "calc(100vh - 56px)" }}>
+    <AppLayout>
+      <div className="h-full flex bg-white">
         {/* Sidebar */}
         <aside
           className="hidden md:flex flex-col w-60 flex-shrink-0 bg-white p-5"
@@ -234,7 +233,7 @@ function Ask() {
           </div>
         </main>
       </div>
-    </div>
+    </AppLayout>
   );
 }
 

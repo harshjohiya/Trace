@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { AppNavbar } from "@/components/AppNavbar";
+import { AppLayout } from "@/components/AppLayout";
 import { ConnectionGuard } from "@/components/ConnectionGuard";
 import { SpeakerAvatar } from "@/components/Speakers";
 import {
@@ -70,8 +70,7 @@ function MeetingDetail() {
   usePageTitle(meeting ? `${meeting.title} — Trace` : "Meeting — Trace");
 
   return (
-    <div className="min-h-screen bg-white">
-      <AppNavbar />
+    <AppLayout>
       <div className="mx-auto px-6 py-8" style={{ maxWidth: 1200 }}>
         <Link
           to="/meetings"
@@ -98,7 +97,7 @@ function MeetingDetail() {
           </>
         )}
       </div>
-    </div>
+    </AppLayout>
   );
 }
 

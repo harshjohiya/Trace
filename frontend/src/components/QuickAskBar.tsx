@@ -45,7 +45,7 @@ export function QuickAskBar() {
   return (
     <div
       ref={ref}
-      className="fixed bottom-0 left-0 right-0 z-30"
+      className="sticky bottom-0 z-30"
       style={{
         background: "rgba(255,255,255,0.92)",
         backdropFilter: "blur(12px)",

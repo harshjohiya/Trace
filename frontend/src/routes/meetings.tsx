@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, Search } from "lucide-react";
-import { AppNavbar } from "@/components/AppNavbar";
+import { AppLayout } from "@/components/AppLayout";
 import { ConnectionGuard } from "@/components/ConnectionGuard";
 import { QuickAskBar } from "@/components/QuickAskBar";
 import { SpeakerStack } from "@/components/Speakers";
@@ -69,9 +69,8 @@ function MeetingsList() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24">
-      <AppNavbar />
-      <div className="mx-auto px-6 py-10" style={{ maxWidth: 1200 }}>
+    <AppLayout>
+      <div className="mx-auto px-6 py-8" style={{ maxWidth: 1200 }}>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <h1 className="text-[22px] font-bold" style={{ color: "var(--ink-1)" }}>
@@ -166,7 +165,7 @@ function MeetingsList() {
         )}
       </div>
       <QuickAskBar />
-    </div>
+    </AppLayout>
   );
 }
 

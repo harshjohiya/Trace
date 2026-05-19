@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Layers, CheckCircle, Zap, AlertTriangle, Calendar, Clock } from "lucide-react";
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { AppNavbar } from "@/components/AppNavbar";
+import { AppLayout } from "@/components/AppLayout";
 import { ConnectionGuard } from "@/components/ConnectionGuard";
 import { UploadCard } from "@/components/UploadCard";
 import { QuickAskBar } from "@/components/QuickAskBar";
@@ -51,9 +51,8 @@ function Dashboard() {
     uploadRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
 
   return (
-    <div className="min-h-screen bg-white pb-24">
-      <AppNavbar onUpload={scrollToUpload} />
-      <div className="mx-auto px-6 py-10" style={{ maxWidth: 1200 }}>
+    <AppLayout onUpload={scrollToUpload}>
+      <div className="mx-auto px-6 py-8" style={{ maxWidth: 1200 }}>
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[0, 1, 2, 3].map((i) => (
@@ -91,7 +90,7 @@ function Dashboard() {
         )}
       </div>
       <QuickAskBar />
-    </div>
+    </AppLayout>
   );
 }
 
