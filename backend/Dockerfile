@@ -18,7 +18,6 @@ COPY . .
 RUN mkdir -p data/audio data/transcripts data/chroma_db
 
 # Port will be provided by Render via $PORT environment variable
-EXPOSE 10000
 
 # Start command
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT

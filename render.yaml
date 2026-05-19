@@ -11,8 +11,6 @@ services:
       mountPath: /app/data
       sizeGB: 1
     envVars:
-      - key: PORT
-        value: 10000
       - key: GROQ_API_KEY
         sync: false
       - key: SECRET_KEY
