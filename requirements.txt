@@ -23,7 +23,9 @@ sqlalchemy==2.0.31
 psycopg2-binary==2.9.9
 
 # Utilities
-pydantic==2.8.2
+pydantic[email]==2.8.2
 numpy==1.26.4
 pandas==2.2.2
 tqdm==4.66.4
+pyjwt==2.8.0
+passlib[bcrypt]==1.7.4

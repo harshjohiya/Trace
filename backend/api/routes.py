@@ -49,6 +49,10 @@ from backend.rag.extractor import MeetingExtractor
 from backend.db.vector_store import VectorStore
 from backend.rag.query_engine import MeetingQueryEngine
 from backend.core.config import config
+from backend.db.database import Base, engine
+from backend.api.auth import router as auth_router, get_current_user
+from backend.models.user import User
+from fastapi import Depends
 
 # ── App setup ────────────────────────────────────────────
 app = FastAPI(
@@ -63,6 +67,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialize database
+Base.metadata.create_all(bind=engine)
+
+# Include Auth Router
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 # ── Singletons — load once, reuse across requests ────────
 print("[API] Loading models...")
@@ -144,7 +154,9 @@ def health():
 @app.post("/meetings/upload")
 def upload_meeting(
     background_tasks: BackgroundTasks,
+    diarization_enabled: bool = False,
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Upload an audio/video file.
@@ -178,10 +190,11 @@ def upload_meeting(
 
     # ── Dedup check: hash file content, reject if already processed ──
     file_hash = sha256.hexdigest()
+    user_hash_key = f"{current_user.id}_{file_hash}"
     registry  = _load_hash_registry()
 
-    if file_hash in registry:
-        existing_entry = registry[file_hash]
+    if user_hash_key in registry:
+        existing_entry = registry[user_hash_key]
         existing_id = (
             existing_entry.get("meeting_id")
             if isinstance(existing_entry, dict)
@@ -222,11 +235,11 @@ def upload_meeting(
 
         # Stale/failed entry — allow reprocess
         print(f"[Upload] Stale hash entry detected for {existing_id}; reprocessing")
-        registry.pop(file_hash, None)
+        registry.pop(user_hash_key, None)
         _save_hash_registry(registry)
 
     # Register this hash → meeting_id
-    registry[file_hash] = meeting_id
+    registry[user_hash_key] = meeting_id
     _save_hash_registry(registry)
 
     # Create job
@@ -244,7 +257,7 @@ def upload_meeting(
     # Run pipeline in background
     background_tasks.add_task(
         _run_pipeline,
-        job_id, meeting_id, str(upload_path)
+        job_id, meeting_id, str(upload_path), diarization_enabled, current_user.id
     )
 
     return {
@@ -255,7 +268,7 @@ def upload_meeting(
     }
 
 
-def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
+def _run_pipeline(job_id: str, meeting_id: str, audio_path: str, diarization_enabled: bool, user_id: int):
     """Full processing pipeline as background task."""
 
     # Re-inject venv path inside background thread
@@ -286,7 +299,8 @@ def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
         update_job("transcribing", 25)
         print(f"[Pipeline] {job_id} — transcribing...")
         transcribe_start = datetime.now()
-        transcript = transcriber.transcribe(wav_path, meeting_id=meeting_id)
+        transcript = transcriber.transcribe(wav_path, meeting_id=meeting_id, diarization_enabled=diarization_enabled)
+        transcript["user_id"] = user_id
         print(f"[Pipeline] {job_id} — transcribe took {(datetime.now() - transcribe_start).total_seconds():.1f}s")
 
         # Save transcript
@@ -301,6 +315,7 @@ def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
         print(f"[Pipeline] {job_id} — extracting...")
         extract_start = datetime.now()
         extraction = extractor.extract(transcript)
+        extraction["user_id"] = user_id
         extractor.save(extraction)
         print(f"[Pipeline] {job_id} — extraction saved")
         print(f"[Pipeline] {job_id} — extraction took {(datetime.now() - extract_start).total_seconds():.1f}s")
@@ -330,15 +345,16 @@ def _run_pipeline(job_id: str, meeting_id: str, audio_path: str):
         # On failure, remove hash entry so the same audio can be retried
         try:
             file_hash = _hash_file(audio_path)
+            user_hash_key = f"{user_id}_{file_hash}"
             registry = _load_hash_registry()
-            existing_entry = registry.get(file_hash)
+            existing_entry = registry.get(user_hash_key)
             existing_id = (
                 existing_entry.get("meeting_id")
                 if isinstance(existing_entry, dict)
                 else existing_entry
             )
             if existing_id == meeting_id:
-                registry.pop(file_hash, None)
+                registry.pop(user_hash_key, None)
                 _save_hash_registry(registry)
                 print(f"[Pipeline] {job_id} — removed hash entry for failed {meeting_id}")
         except Exception as cleanup_err:
@@ -358,7 +374,7 @@ def get_job_status(job_id: str):
 # ── Meeting data endpoints ───────────────────────────────
 
 @app.get("/meetings")
-def list_meetings():
+def list_meetings(current_user: User = Depends(get_current_user)):
     """List all processed meetings."""
     extraction_dir = Path("data/extractions")
     meetings       = []
@@ -370,6 +386,8 @@ def list_meetings():
         try:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
+            if data.get("user_id") != current_user.id:
+                continue
             meetings.append({
                 "meeting_id":   data.get("meeting_id"),
                 "title":        data.get("title", "Untitled"),
@@ -388,35 +406,41 @@ def list_meetings():
 
 
 @app.get("/meetings/{meeting_id}")
-def get_meeting(meeting_id: str):
+def get_meeting(meeting_id: str, current_user: User = Depends(get_current_user)):
     """Get full extraction data for a meeting."""
     path = Path(f"data/extractions/{meeting_id}.json")
     if not path.exists():
         raise HTTPException(status_code=404, detail="Meeting not found")
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+        if data.get("user_id") != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        return data
 
 
 @app.get("/meetings/{meeting_id}/transcript")
-def get_transcript(meeting_id: str):
+def get_transcript(meeting_id: str, current_user: User = Depends(get_current_user)):
     """Get full transcript for a meeting."""
     path = Path(f"data/transcripts/{meeting_id}.json")
     if not path.exists():
         raise HTTPException(status_code=404, detail="Transcript not found")
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+        if data.get("user_id") != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        return data
 
 
 @app.get("/meetings/{meeting_id}/extraction")
-def get_extraction(meeting_id: str):
+def get_extraction(meeting_id: str, current_user: User = Depends(get_current_user)):
     """Get structured extraction for a meeting."""
-    return get_meeting(meeting_id)
+    return get_meeting(meeting_id, current_user)
 
 
 # ── Query endpoints ──────────────────────────────────────
 
 @app.post("/query")
-def query_meetings(request: QueryRequest):
+def query_meetings(request: QueryRequest, current_user: User = Depends(get_current_user)):
     """
     Ask a natural language question across all meetings.
 
@@ -434,7 +458,8 @@ def query_meetings(request: QueryRequest):
         # Structured filtered query
         result = query_engine.ask_structured(
             request.question,
-            filter_type=request.filter_type
+            filter_type=request.filter_type,
+            user_id=current_user.id
         )
         return {
             "question":    request.question,
@@ -444,7 +469,7 @@ def query_meetings(request: QueryRequest):
         }
     else:
         # Natural language RAG query
-        result = query_engine.ask(request.question)
+        result = query_engine.ask(request.question, user_id=current_user.id)
         return QueryResponse(
             question   = result["question"],
             answer     = result["answer"],
@@ -454,9 +479,9 @@ def query_meetings(request: QueryRequest):
 
 
 @app.get("/meetings/{meeting_id}/action-items")
-def get_action_items(meeting_id: str):
+def get_action_items(meeting_id: str, current_user: User = Depends(get_current_user)):
     """Get all action items for a specific meeting."""
-    meeting = get_meeting(meeting_id)
+    meeting = get_meeting(meeting_id, current_user)
     return {
         "meeting_id":   meeting_id,
         "action_items": meeting.get("action_items", []),
@@ -465,9 +490,9 @@ def get_action_items(meeting_id: str):
 
 
 @app.get("/meetings/{meeting_id}/decisions")
-def get_decisions(meeting_id: str):
+def get_decisions(meeting_id: str, current_user: User = Depends(get_current_user)):
     """Get all decisions for a specific meeting."""
-    meeting = get_meeting(meeting_id)
+    meeting = get_meeting(meeting_id, current_user)
     return {
         "meeting_id": meeting_id,
         "decisions":  meeting.get("decisions", []),
@@ -478,8 +503,11 @@ def get_decisions(meeting_id: str):
 # ── Delete meeting ───────────────────────────────────────
 
 @app.delete("/meetings/{meeting_id}")
-def delete_meeting(meeting_id: str):
+def delete_meeting(meeting_id: str, current_user: User = Depends(get_current_user)):
     """Delete a meeting and all its data."""
+    # Verify ownership before deleting
+    get_meeting(meeting_id, current_user)
+    
     deleted = []
     errors  = []
 

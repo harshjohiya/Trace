@@ -53,12 +53,16 @@ type QAItem = {
   loading: boolean;
 };
 
+import { AuthGuard } from "@/components/AuthGuard";
+
 function AskPage() {
   usePageTitle("Ask Trace");
   return (
-    <ConnectionGuard>
-      <Ask />
-    </ConnectionGuard>
+    <AuthGuard>
+      <ConnectionGuard>
+        <Ask />
+      </ConnectionGuard>
+    </AuthGuard>
   );
 }
 

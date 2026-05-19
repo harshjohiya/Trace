@@ -1053,15 +1053,28 @@ function FinalCTA() {
 function Footer() {
   return (
     <footer
-      className="h-16 flex items-center justify-between px-6 bg-white"
+      className="py-8 px-6 bg-white"
       style={{ borderTop: "1px solid var(--border)" }}
     >
-      <div className="flex items-center gap-2 text-[13px]" style={{ color: "var(--ink-3)" }}>
-        <WaveformIcon size={16} />
-        <span className="font-semibold" style={{ color: "var(--ink-1)" }}>
-          Trace
-        </span>
-        <span>Meeting Intelligence</span>
+      <div className="mx-auto flex flex-col md:flex-row items-center justify-between gap-4" style={{ maxWidth: 1200 }}>
+        <div className="flex items-center gap-2 text-[13px]" style={{ color: "var(--ink-3)" }}>
+          <WaveformIcon size={18} color="var(--ink-1)" />
+          <span className="font-semibold" style={{ color: "var(--ink-1)" }}>
+            Trace
+          </span>
+          <span className="hidden sm:inline">·</span>
+          <span className="hidden sm:inline">Meeting Intelligence</span>
+        </div>
+        
+        <div className="flex items-center gap-6 text-[13px] font-medium" style={{ color: "var(--ink-2)" }}>
+          <a href="#" className="hover:text-[var(--ink-1)] transition-colors">Privacy</a>
+          <a href="#" className="hover:text-[var(--ink-1)] transition-colors">Terms</a>
+          <a href="#" className="hover:text-[var(--ink-1)] transition-colors">Contact</a>
+        </div>
+        
+        <div className="text-[12px]" style={{ color: "var(--ink-3)" }}>
+          © {new Date().getFullYear()} Trace Intelligence Inc. All rights reserved.
+        </div>
       </div>
     </footer>
   );

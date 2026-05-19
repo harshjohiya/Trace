@@ -35,12 +35,8 @@ Thumbs.db
 # Logs
 *.log
 
-# Data / User content (transcripts, extractions, audio)
-data/audio/
-data/transcripts/
-data/extractions/
-data/chroma_db/
-data/audio_hashes.json
+# Data / User content (transcripts, extractions, audio, db)
+data/
 
 # Media files
 *.wav

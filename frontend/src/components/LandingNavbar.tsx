@@ -48,7 +48,7 @@ export function LandingNavbar() {
       
       <div className="flex items-center gap-6 ml-auto">
         <Link
-          to="/dashboard"
+          to="/auth"
           className="text-[14px] font-medium transition-colors"
           style={{ color: "var(--ink-2)" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink-1)")}
@@ -57,7 +57,7 @@ export function LandingNavbar() {
           Sign in
         </Link>
         <Link
-          to="/dashboard"
+          to="/auth"
           className="inline-flex items-center h-[38px] px-5 rounded-[8px] text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
           style={{ background: "var(--accent)" }}
         >

@@ -24,4 +24,7 @@ class Config:
     AUDIO_DIR = "./data/audio"
     TRANSCRIPT_DIR = "./data/transcripts"
 
+    # Security
+    SECRET_KEY = os.getenv("SECRET_KEY", "trace_super_secret_jwt_key_for_development")
+
 config = Config()

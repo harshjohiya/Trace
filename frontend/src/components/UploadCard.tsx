@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { UploadCloud, X } from "lucide-react";
+import { UploadCloud, X, AlertTriangle } from "lucide-react";
 import { uploadMeeting, getJobStatus, type JobStatus } from "@/lib/api";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,6 +16,7 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
   const [dragOver, setDragOver] = useState(false);
   const [job, setJob] = useState<JobStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [diarizationEnabled, setDiarizationEnabled] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const nav = useNavigate();
 
@@ -29,7 +30,7 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
     if (!file) return;
     setError(null);
     try {
-      const { job_id } = await uploadMeeting(file);
+      const { job_id } = await uploadMeeting(file, diarizationEnabled);
       setJob({ job_id, status: "pending", progress: 0, step: STEPS[0], meeting_id: null, error: null });
       pollRef.current = setInterval(async () => {
         try {
@@ -55,6 +56,7 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
     setJob(null);
     setFile(null);
     setError(null);
+    setDiarizationEnabled(false);
   };
 
   // Processing view
@@ -161,8 +163,8 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
 
   // Upload card
   return (
-    <label
-      className="block bg-white rounded-xl text-center cursor-pointer transition-colors"
+    <div
+      className="block bg-white rounded-xl text-center transition-colors relative"
       style={{
         border: `2px dashed ${dragOver ? "var(--accent-mid)" : "var(--border-mid)"}`,
         background: dragOver ? "var(--accent-dim)" : "white",
@@ -181,6 +183,7 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
       }}
     >
       <input
+        id="meeting-upload"
         type="file"
         className="hidden"
         accept=".mp3,.mp4,.wav,.m4a,.ogg,.flac"
@@ -192,16 +195,18 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
       <AnimatePresence mode="wait">
         {!file ? (
           <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <UploadCloud size={36} strokeWidth={1.5} style={{ color: "var(--accent)", margin: "0 auto" }} />
-            <h3 className="mt-4 text-[16px] font-semibold" style={{ color: "var(--ink-1)" }}>
-              Upload a meeting recording
-            </h3>
-            <p className="text-[13px] mt-1" style={{ color: "var(--ink-3)" }}>
-              Drag and drop a file here, or click to browse
-            </p>
-            <p className="text-[12px] mt-3 font-mono" style={{ color: "var(--ink-4)" }}>
-              MP3 · MP4 · WAV · M4A · OGG · FLAC
-            </p>
+            <label htmlFor="meeting-upload" className="cursor-pointer block w-full h-full">
+              <UploadCloud size={36} strokeWidth={1.5} style={{ color: "var(--accent)", margin: "0 auto" }} />
+              <h3 className="mt-4 text-[16px] font-semibold" style={{ color: "var(--ink-1)" }}>
+                Upload a meeting recording
+              </h3>
+              <p className="text-[13px] mt-1" style={{ color: "var(--ink-3)" }}>
+                Drag and drop a file here, or click to browse
+              </p>
+              <p className="text-[12px] mt-3 font-mono" style={{ color: "var(--ink-4)" }}>
+                MP3 · MP4 · WAV · M4A · OGG · FLAC
+              </p>
+            </label>
           </motion.div>
         ) : (
           <motion.div key="picked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -211,13 +216,40 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
             <div className="text-[13px] mt-1" style={{ color: "var(--ink-3)" }}>
               {(file.size / 1024 / 1024).toFixed(1)} MB
             </div>
-            <div className="mt-4 flex items-center justify-center gap-3">
+            
+            <div 
+              className="mt-6 mx-auto max-w-sm p-5 rounded-xl text-left border" 
+              style={{ borderColor: "var(--border-mid)", background: "var(--surface)" }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[14px] font-semibold" style={{ color: "var(--ink-1)" }}>Enable Speaker Diarization</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={diarizationEnabled} 
+                    onChange={(e) => setDiarizationEnabled(e.target.checked)} 
+                  />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" style={{ background: diarizationEnabled ? "var(--accent)" : "var(--border-mid)" }}></div>
+                </label>
+              </div>
+              <p className="text-[12px] leading-relaxed" style={{ color: "var(--ink-3)" }}>
+                Speaker diarization identifies and separates different speakers in the meeting. This process improves speaker-based transcripts but may increase processing time.
+              </p>
+              {diarizationEnabled && (
+                <div className="mt-3 text-[12px] font-medium flex items-center gap-1.5" style={{ color: "#d97706" }}>
+                  <AlertTriangle size={14} /> Diarization may increase processing time.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex items-center justify-center gap-3">
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   start();
                 }}
-                className="inline-flex h-10 items-center px-5 rounded-md text-white text-[14px] font-semibold"
+                className="inline-flex h-10 items-center px-5 rounded-md text-white text-[14px] font-semibold transition-transform active:scale-95"
                 style={{ background: "var(--accent)" }}
               >
                 Process with Trace
@@ -225,17 +257,17 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
               <button
                 onClick={(e) => {
                   e.preventDefault();
-                  setFile(null);
+                  reset();
                 }}
-                className="text-[13px] inline-flex items-center gap-1"
+                className="text-[13px] inline-flex items-center gap-1 hover:opacity-70 transition-opacity"
                 style={{ color: "var(--ink-3)" }}
               >
-                <X size={14} /> Remove file
+                <X size={14} /> Cancel
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </label>
+    </div>
   );
 }

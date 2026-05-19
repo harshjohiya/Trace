@@ -151,7 +151,8 @@ class VectorStore:
             "speaker":      c["speaker"],
             "timestamp":    c["timestamp"],
             "chunk_index":  c["chunk_index"],
-            "type":         c["type"]
+            "type":         c["type"],
+            "user_id":      transcript.get("user_id")
         } for c in chunks]
         ids = [f"{c['meeting_id']}_chunk_{c['chunk_index']}" for c in chunks]
 
@@ -190,6 +191,7 @@ class VectorStore:
             "meeting_title": extraction.get("title", ""),
             "created_at":   extraction.get("created_at", ""),
             "meeting_type": extraction.get("meeting_type", ""),
+            "user_id":      extraction.get("user_id"),
         }
 
         # ── Index action items ────────────────────────────
@@ -306,7 +308,8 @@ class VectorStore:
         self,
         query: str,
         n_results: int = 8,
-        filter_type: str = None
+        filter_type: str = None,
+        user_id: int = None
     ) -> list[dict]:
         """
         Semantic search over extracted facts.
@@ -322,7 +325,17 @@ class VectorStore:
         if total_docs == 0:
             return []
 
-        where = {"type": filter_type} if filter_type else None
+        where_clauses = []
+        if filter_type:
+            where_clauses.append({"type": filter_type})
+        if user_id:
+            where_clauses.append({"user_id": user_id})
+            
+        where = None
+        if len(where_clauses) == 1:
+            where = where_clauses[0]
+        elif len(where_clauses) > 1:
+            where = {"$and": where_clauses}
 
         results = self.extractions.query(
             query_embeddings=[query_embedding],
@@ -354,7 +367,8 @@ class VectorStore:
     def search_transcripts(
         self,
         query: str,
-        n_results: int = 3
+        n_results: int = 3,
+        user_id: int = None
     ) -> list[dict]:
         """
         Semantic search over raw transcript chunks.
@@ -366,10 +380,13 @@ class VectorStore:
         total_docs = self.transcripts.count()
         if total_docs == 0:
             return []
+            
+        where = {"user_id": user_id} if user_id else None
 
         results = self.transcripts.query(
             query_embeddings=[query_embedding],
             n_results=min(n_results, total_docs),
+            where=where,
             include=["documents", "metadatas", "distances"]
         )
 

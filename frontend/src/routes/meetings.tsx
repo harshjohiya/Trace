@@ -25,6 +25,8 @@ const FILTERS = ["All", "Planning", "Review", "Standup", "Onboarding"] as const;
 type Filter = (typeof FILTERS)[number];
 type Sort = "newest" | "oldest" | "tasks";
 
+import { AuthGuard } from "@/components/AuthGuard";
+
 function MeetingsListPage() {
   usePageTitle("My Meetings — Trace");
   const location = useLocation();
@@ -34,9 +36,11 @@ function MeetingsListPage() {
   }
 
   return (
-    <ConnectionGuard>
-      <MeetingsList />
-    </ConnectionGuard>
+    <AuthGuard>
+      <ConnectionGuard>
+        <MeetingsList />
+      </ConnectionGuard>
+    </AuthGuard>
   );
 }
 

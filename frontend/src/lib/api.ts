@@ -209,12 +209,12 @@ export const getTranscript = (id: string) =>
 export const deleteMeeting = (id: string) =>
   withRetry(() => api.delete(`/meetings/${id}`).then(() => undefined));
 
-export const uploadMeeting = (file: File) => {
+export const uploadMeeting = (file: File, diarization_enabled: boolean = false) => {
   const fd = new FormData();
   fd.append("file", file);
   return api
     .post<{ job_id: string; meeting_id: string }>(
-      "/meetings/upload",
+      `/meetings/upload?diarization_enabled=${diarization_enabled}`,
       fd,
       { headers: { "Content-Type": "multipart/form-data" }, timeout: 60000 }
     )
@@ -241,3 +241,12 @@ export const queryMeetings = (question: string, filter_type?: string) =>
         filter_type: data.filter_type ?? null,
       };
     });
+
+// ── Auth APIs ─────────────────────────────────────────────
+
+export const login = (email: string, password: string) =>
+  api.post("/auth/login", { email, password }).then((r) => r.data);
+
+export const signup = (email: string, password: string, full_name: string) =>
+  api.post("/auth/signup", { email, password, full_name }).then((r) => r.data);
+

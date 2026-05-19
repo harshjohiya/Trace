@@ -19,12 +19,16 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
+import { AuthGuard } from "@/components/AuthGuard";
+
 function DashboardPage() {
   usePageTitle("Dashboard — Trace");
   return (
-    <ConnectionGuard>
-      <Dashboard />
-    </ConnectionGuard>
+    <AuthGuard>
+      <ConnectionGuard>
+        <Dashboard />
+      </ConnectionGuard>
+    </AuthGuard>
   );
 }
 

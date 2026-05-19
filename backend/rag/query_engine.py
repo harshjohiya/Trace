@@ -55,12 +55,12 @@ class MeetingQueryEngine:
 
         return chunks
 
-    def _build_context(self, query: str) -> tuple[str, list]:
+    def _build_context(self, query: str, user_id: int = None) -> tuple[str, list]:
         """
         Retrieve relevant facts + transcript chunks for the query.
         """
-        fact_hits       = self.vs.search_extractions(query, n_results=8)
-        transcript_hits = self.vs.search_transcripts(query, n_results=3)
+        fact_hits       = self.vs.search_extractions(query, n_results=8, user_id=user_id)
+        transcript_hits = self.vs.search_transcripts(query, n_results=3, user_id=user_id)
 
         sources = []
         context_parts = []
@@ -120,7 +120,7 @@ class MeetingQueryEngine:
                 ) from e
             raise RuntimeError(f"RAG LLM call failed via Groq: {error_text}") from e
 
-    def ask(self, question: str) -> dict:
+    def ask(self, question: str, user_id: int = None) -> dict:
         """
         Main query method. Ask anything about your meetings.
 
@@ -135,7 +135,7 @@ class MeetingQueryEngine:
         print(f"\n[QueryEngine] Question: {question}")
 
         # Step 1: Retrieve context
-        context, sources = self._build_context(question)
+        context, sources = self._build_context(question, user_id=user_id)
 
         if not context.strip():
             return {
@@ -190,7 +190,8 @@ Answer based strictly on the context above:"""
     def ask_structured(
         self,
         question: str,
-        filter_type: str = None
+        filter_type: str = None,
+        user_id: int = None
     ) -> dict:
         """
         Query with type filter for precise structured lookups.
@@ -199,7 +200,8 @@ Answer based strictly on the context above:"""
         hits = self.vs.search_extractions(
             question,
             n_results=10,
-            filter_type=filter_type
+            filter_type=filter_type,
+            user_id=user_id
         )
 
         # Much lower threshold for structured - we WANT all facts of that type

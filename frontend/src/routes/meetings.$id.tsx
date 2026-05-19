@@ -48,11 +48,15 @@ export const Route = createFileRoute("/meetings/$id")({
 
 type Tab = "summary" | "transcript" | "actions" | "export";
 
+import { AuthGuard } from "@/components/AuthGuard";
+
 function MeetingDetailPage() {
   return (
-    <ConnectionGuard>
-      <MeetingDetail />
-    </ConnectionGuard>
+    <AuthGuard>
+      <ConnectionGuard>
+        <MeetingDetail />
+      </ConnectionGuard>
+    </AuthGuard>
   );
 }
 
