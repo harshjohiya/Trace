@@ -1,7 +1,9 @@
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
+import jwt
 
 from db.database import get_db
 from models.user import User
@@ -9,10 +11,15 @@ from core.security import (
     verify_password,
     get_password_hash,
     create_access_token,
+    SECRET_KEY,
+    ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
 router = APIRouter()
+
+
+# ── Pydantic Schemas ────────────────────────────────────────
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -28,6 +35,9 @@ class Token(BaseModel):
     token_type: str
     user: dict
 
+
+# ── Auth Routes ─────────────────────────────────────────────
+
 @router.post("/signup", response_model=Token)
 def signup(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
@@ -37,16 +47,29 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
     hashed_password = get_password_hash(user.password)
-    new_user = User(email=user.email, hashed_password=hashed_password, full_name=user.full_name)
+    new_user = User(
+        email=user.email,
+        hashed_password=hashed_password,
+        full_name=user.full_name
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": new_user.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer", "user": {"id": new_user.id, "email": new_user.email, "full_name": new_user.full_name}}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": new_user.id,
+            "email": new_user.email,
+            "full_name": new_user.full_name
+        }
+    }
+
 
 @router.post("/login", response_model=Token)
 def login(user: UserLogin, db: Session = Depends(get_db)):
@@ -57,16 +80,23 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": db_user.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer", "user": {"id": db_user.id, "email": db_user.email, "full_name": db_user.full_name}}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": db_user.id,
+            "email": db_user.email,
+            "full_name": db_user.full_name
+        }
+    }
 
-from fastapi.security import OAuth2PasswordBearer
-import jwt
-from core.security import SECRET_KEY, ALGORITHM
+
+# ── JWT Token Verification ─────────────────────────────────
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -81,7 +111,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-    except jwt.PyJWTError:
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.InvalidTokenError:
         raise credentials_exception
     user = db.query(User).filter(User.email == email).first()
     if user is None:
