@@ -20,9 +20,7 @@ env/
 
 # Environment / Secrets
 .env
-.env.*
 .env.local
-.env.production
 
 # OS / IDE
 .DS_Store
