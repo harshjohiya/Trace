@@ -493,8 +493,10 @@ Return ONLY the summary text, no JSON, no labels."""
 
         return output
 
-    def save(self, extraction: dict, output_dir: str = "data/extractions") -> str:
+    def save(self, extraction: dict, output_dir: str = None) -> str:
         """Save extraction result to disk."""
+        if output_dir is None:
+            output_dir = config.EXTRACTION_DIR
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         path = Path(output_dir) / f"{extraction['meeting_id']}.json"
         with open(path, "w", encoding="utf-8") as f:

@@ -30,7 +30,22 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
     if (!file) return;
     setError(null);
     try {
-      const { job_id } = await uploadMeeting(file, diarizationEnabled);
+      const res = await uploadMeeting(file, diarizationEnabled);
+
+      // Handle duplicate: backend returns { status: "duplicate", meeting_id } with no job_id
+      if ((res as { status?: string }).status === "duplicate") {
+        if (res.meeting_id) {
+          nav({ to: "/meetings/$id", params: { id: res.meeting_id } });
+        }
+        return;
+      }
+
+      const { job_id } = res;
+      if (!job_id) {
+        setError("Upload failed: no job ID returned.");
+        return;
+      }
+
       setJob({ job_id, status: "pending", progress: 0, step: STEPS[0], meeting_id: null, error: null });
       pollRef.current = setInterval(async () => {
         try {
@@ -47,7 +62,7 @@ export function UploadCard({ onDone }: { onDone?: () => void }) {
         }
       }, 2000);
     } catch (e) {
-      setError("Upload failed.");
+      setError("Upload failed. Please try again.");
     }
   };
 

@@ -190,15 +190,16 @@ class Transcriber:
         }
 
         output_path = self._save_transcript(transcript, meeting_id)
-        print(f"[Transcriber] Done — {len(segments)} segments")
-        print(f"[Transcriber] Saved → {output_path}")
+        print(f"[Transcriber] Done - {len(segments)} segments")
+        print(f"[Transcriber] Saved -> {output_path}")
 
         return transcript
 
     def _save_transcript(self, transcript: dict, meeting_id: str) -> str:
         from pathlib import Path
         import json
-        output_dir = Path("data/transcripts")
+        from core.config import config
+        output_dir = Path(config.TRANSCRIPT_DIR)
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / f"{meeting_id}.json"
         with open(output_path, "w", encoding="utf-8") as f:

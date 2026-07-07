@@ -1,7 +1,13 @@
 from dotenv import load_dotenv
+from pathlib import Path
 import os
 
 load_dotenv()
+
+# Project root is the parent of the backend/ directory
+# This ensures all data paths are absolute regardless of where uvicorn is launched from
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_DATA_DIR = _PROJECT_ROOT / "data"
 
 class Config:
     # LLM
@@ -18,13 +24,16 @@ class Config:
 
     # Storage
     DATABASE_URL = os.getenv("DATABASE_URL")
-    CHROMA_PATH = os.getenv("CHROMA_PATH", "./data/chroma_db")
+    CHROMA_PATH = os.getenv("CHROMA_PATH", str(_DATA_DIR / "chroma_db"))
 
-    # Audio
-    AUDIO_DIR = "./data/audio"
-    TRANSCRIPT_DIR = "./data/transcripts"
+    # Audio — all absolute paths anchored to project root
+    AUDIO_DIR      = str(_DATA_DIR / "audio")
+    TRANSCRIPT_DIR = str(_DATA_DIR / "transcripts")
+    EXTRACTION_DIR = str(_DATA_DIR / "extractions")
+    HASH_REGISTRY  = str(_DATA_DIR / "audio_hashes.json")
 
     # Security
     SECRET_KEY = os.getenv("SECRET_KEY", "trace_super_secret_jwt_key_for_development")
 
 config = Config()
+

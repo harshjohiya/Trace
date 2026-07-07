@@ -213,7 +213,7 @@ export const uploadMeeting = (file: File, diarization_enabled: boolean = false) 
   const fd = new FormData();
   fd.append("file", file);
   return api
-    .post<{ job_id: string; meeting_id: string }>(
+    .post<{ job_id?: string; meeting_id: string; status?: string; message?: string }>(
       `/meetings/upload?diarization_enabled=${diarization_enabled}`,
       fd,
       { headers: { "Content-Type": "multipart/form-data" }, timeout: 60000 }

@@ -17,9 +17,11 @@ if DATABASE_URL:
     
     engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_size=5)
 else:
-    # Local development — SQLite
-    SQLALCHEMY_DATABASE_URL = "sqlite:///./data/trace.db"
-    Path("./data").mkdir(parents=True, exist_ok=True)
+    # Local development — SQLite with absolute path anchored to project root
+    _project_root = Path(__file__).resolve().parents[2]
+    _db_path = _project_root / "data" / "trace.db"
+    _db_path.parent.mkdir(parents=True, exist_ok=True)
+    SQLALCHEMY_DATABASE_URL = f"sqlite:///{_db_path}"
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
     )

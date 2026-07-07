@@ -93,7 +93,7 @@ print("[API] All models ready [ok]")
 jobs: dict = {}
 
 # ── Audio hash registry — prevents duplicate uploads ─────
-_HASH_REGISTRY_PATH = Path("data/audio_hashes.json")
+_HASH_REGISTRY_PATH = Path(config.HASH_REGISTRY)
 
 def _load_hash_registry() -> dict:
     """Load hash→meeting_id mapping from disk."""
@@ -207,7 +207,7 @@ def upload_meeting(
         )
 
         transcript_path = Path(config.TRANSCRIPT_DIR) / f"{existing_id}.json"
-        extraction_path = Path("data/extractions") / f"{existing_id}.json"
+        extraction_path = Path(config.EXTRACTION_DIR) / f"{existing_id}.json"
         active_job = next(
             (job for job in jobs.values()
              if job.get("meeting_id") == existing_id),
@@ -294,45 +294,45 @@ def _run_pipeline(job_id: str, meeting_id: str, audio_path: str, diarization_ena
 
         # Step 1: Convert audio
         update_job("converting", 10)
-        print(f"[Pipeline] {job_id} — converting audio: {audio_path}")
+        print(f"[Pipeline] {job_id} - converting audio: {audio_path}")
         convert_start = datetime.now()
         wav_path = audio_processor.convert_to_wav(audio_path)
-        print(f"[Pipeline] {job_id} — converted to: {wav_path}")
-        print(f"[Pipeline] {job_id} — convert took {(datetime.now() - convert_start).total_seconds():.1f}s")
+        print(f"[Pipeline] {job_id} - converted to: {wav_path}")
+        print(f"[Pipeline] {job_id} - convert took {(datetime.now() - convert_start).total_seconds():.1f}s")
 
         # Step 2: Transcribe + diarize
         update_job("transcribing", 25)
-        print(f"[Pipeline] {job_id} — transcribing...")
+        print(f"[Pipeline] {job_id} - transcribing...")
         transcribe_start = datetime.now()
         transcript = transcriber.transcribe(wav_path, meeting_id=meeting_id, diarization_enabled=diarization_enabled)
         transcript["user_id"] = user_id
-        print(f"[Pipeline] {job_id} — transcribe took {(datetime.now() - transcribe_start).total_seconds():.1f}s")
+        print(f"[Pipeline] {job_id} - transcribe took {(datetime.now() - transcribe_start).total_seconds():.1f}s")
 
         # Save transcript
         transcript_path = Path(config.TRANSCRIPT_DIR) / f"{meeting_id}.json"
         transcript_path.parent.mkdir(parents=True, exist_ok=True)
         with open(transcript_path, "w", encoding="utf-8") as f:
             json.dump(transcript, f, indent=2)
-        print(f"[Pipeline] {job_id} — transcript saved")
+        print(f"[Pipeline] {job_id} - transcript saved")
 
         # Step 3: Extract structured data
         update_job("extracting", 60)
-        print(f"[Pipeline] {job_id} — extracting...")
+        print(f"[Pipeline] {job_id} - extracting...")
         extract_start = datetime.now()
         extraction = extractor.extract(transcript)
         extraction["user_id"] = user_id
         extractor.save(extraction)
-        print(f"[Pipeline] {job_id} — extraction saved")
-        print(f"[Pipeline] {job_id} — extraction took {(datetime.now() - extract_start).total_seconds():.1f}s")
+        print(f"[Pipeline] {job_id} - extraction saved")
+        print(f"[Pipeline] {job_id} - extraction took {(datetime.now() - extract_start).total_seconds():.1f}s")
 
         # Step 4: Index in vector DB
         update_job("indexing", 85)
-        print(f"[Pipeline] {job_id} — indexing...")
+        print(f"[Pipeline] {job_id} - indexing...")
         index_start = datetime.now()
         vector_store.index_transcript(transcript)
         vector_store.index_extraction(extraction)
-        print(f"[Pipeline] {job_id} — indexed")
-        print(f"[Pipeline] {job_id} — indexing took {(datetime.now() - index_start).total_seconds():.1f}s")
+        print(f"[Pipeline] {job_id} - indexed")
+        print(f"[Pipeline] {job_id} - indexing took {(datetime.now() - index_start).total_seconds():.1f}s")
 
         # Done
         update_job("completed", 100)
@@ -340,12 +340,16 @@ def _run_pipeline(job_id: str, meeting_id: str, audio_path: str, diarization_ena
         jobs[job_id]["processing_time_sec"] = round(
             (datetime.now() - pipeline_started).total_seconds(), 1
         )
-        print(f"[Pipeline] {job_id} — COMPLETE")
+        print(f"[Pipeline] {job_id} - COMPLETE")
 
     except Exception as e:
         import traceback
         error_detail = traceback.format_exc()
-        print(f"[Pipeline] {job_id} — FAILED:\n{error_detail}")
+        # Use ascii encoding to avoid cp1252 crash on Windows
+        try:
+            print(f"[Pipeline] {job_id} - FAILED:\n{error_detail}".encode("ascii", errors="replace").decode("ascii"))
+        except Exception:
+            print(f"[Pipeline] {job_id} - FAILED (error printing details)")
         update_job("failed", 0, error=f"{type(e).__name__}: {str(e)}")
         # On failure, remove hash entry so the same audio can be retried
         try:
@@ -381,7 +385,7 @@ def get_job_status(job_id: str):
 @app.get("/meetings")
 def list_meetings(current_user: User = Depends(get_current_user)):
     """List all processed meetings."""
-    extraction_dir = Path("data/extractions")
+    extraction_dir = Path(config.EXTRACTION_DIR)
     meetings       = []
 
     if not extraction_dir.exists():
@@ -413,7 +417,7 @@ def list_meetings(current_user: User = Depends(get_current_user)):
 @app.get("/meetings/{meeting_id}")
 def get_meeting(meeting_id: str, current_user: User = Depends(get_current_user)):
     """Get full extraction data for a meeting."""
-    path = Path(f"data/extractions/{meeting_id}.json")
+    path = Path(config.EXTRACTION_DIR) / f"{meeting_id}.json"
     if not path.exists():
         raise HTTPException(status_code=404, detail="Meeting not found")
     with open(path, "r", encoding="utf-8") as f:
@@ -426,7 +430,7 @@ def get_meeting(meeting_id: str, current_user: User = Depends(get_current_user))
 @app.get("/meetings/{meeting_id}/transcript")
 def get_transcript(meeting_id: str, current_user: User = Depends(get_current_user)):
     """Get full transcript for a meeting."""
-    path = Path(f"data/transcripts/{meeting_id}.json")
+    path = Path(config.TRANSCRIPT_DIR) / f"{meeting_id}.json"
     if not path.exists():
         raise HTTPException(status_code=404, detail="Transcript not found")
     with open(path, "r", encoding="utf-8") as f:
@@ -517,13 +521,13 @@ def delete_meeting(meeting_id: str, current_user: User = Depends(get_current_use
     errors  = []
 
     # Remove extraction
-    ext_path = Path(f"data/extractions/{meeting_id}.json")
+    ext_path = Path(config.EXTRACTION_DIR) / f"{meeting_id}.json"
     if ext_path.exists():
         ext_path.unlink()
         deleted.append("extraction")
 
     # Remove transcript
-    tr_path = Path(f"data/transcripts/{meeting_id}.json")
+    tr_path = Path(config.TRANSCRIPT_DIR) / f"{meeting_id}.json"
     if tr_path.exists():
         tr_path.unlink()
         deleted.append("transcript")
