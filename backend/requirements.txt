@@ -7,7 +7,7 @@ overrides==7.7.0
 passlib==1.7.4
 pyannote.audio==3.1.1
 pydantic==2.13.4
-PyJWT==2.12.1
+PyJWT[crypto]==2.12.1
 python-dotenv==1.2.2
 python-multipart==0.0.9
 requests==2.31.0

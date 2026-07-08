@@ -34,13 +34,17 @@ class Config:
 
     # Security
     SECRET_KEY = os.getenv("SECRET_KEY", "trace_super_secret_jwt_key_for_development")
-    SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
+
+    # Supabase — URL is used to derive the JWKS endpoint for ES256 verification.
+    # SUPABASE_JWT_SECRET is kept for legacy reference but is NOT used for auth.
+    SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+    SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")  # legacy / unused
 
 config = Config()
 
-# Startup check — warn loudly if JWT secret is missing
-if not config.SUPABASE_JWT_SECRET:
-    print("[CONFIG] WARNING: SUPABASE_JWT_SECRET is not set! All JWT verification will fail.")
+# Startup checks
+if not config.SUPABASE_URL:
+    print("[CONFIG] WARNING: SUPABASE_URL is not set! JWT JWKS verification will fail.")
 else:
-    print(f"[CONFIG] SUPABASE_JWT_SECRET loaded (first 8 chars: {config.SUPABASE_JWT_SECRET[:8]}...)")
+    print(f"[CONFIG] SUPABASE_URL: {config.SUPABASE_URL}")
 

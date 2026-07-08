@@ -1,8 +1,8 @@
-import base64
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 import jwt
+from jwt import PyJWKClient
 
 from db.database import get_db
 from models.user import User
@@ -10,76 +10,61 @@ from core.config import config
 
 router = APIRouter()
 
-# ── JWT Token Verification (Supabase) ─────────────────────────
+# ── JWKS-based JWT Verification (Supabase ES256) ──────────────────────────────
+#
+# Supabase now signs user session JWTs with an asymmetric ES256 key pair.
+# Verification must be done against the public key from the JWKS endpoint —
+# the legacy SUPABASE_JWT_SECRET (HS256 shared secret) will NOT work here.
+#
+# The PyJWKClient is instantiated once at module load and cached for the
+# lifetime of the process; it handles key fetching, caching, and rotation
+# internally, so no per-request network round-trips occur.
+
+SUPABASE_JWKS_URL = (
+    f"{config.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
+)
+
+# cache_keys=True (default) – keys are cached and only re-fetched on a kid miss
+_jwks_client = PyJWKClient(SUPABASE_JWKS_URL, cache_keys=True)
+
+print(f"[AUTH] JWKS client initialised -> {SUPABASE_JWKS_URL}")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-def _get_jwt_secret() -> bytes:
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> User:
     """
-    Supabase provides the JWT secret as a base64-encoded string in the dashboard.
-    PyJWT needs the raw bytes, not the base64 string, for HS256 verification.
-    Try base64-decoding first; if it fails, use the raw string as-is (for dev keys).
+    FastAPI dependency that validates a Supabase-issued JWT and returns the
+    corresponding local User record, creating it automatically on first login.
+
+    Raises HTTP 401 with the real PyJWT error message so future debugging is
+    straightforward — no more opaque "Could not validate credentials" messages.
     """
-    secret = config.SUPABASE_JWT_SECRET
+    # ── 1. Resolve the signing key from the project's JWKS ──────────────────
     try:
-        # Supabase secrets are base64url or standard base64
-        # Pad if needed and decode to raw bytes
-        padded = secret + "=" * (-len(secret) % 4)
-        raw = base64.b64decode(padded)
-        print(f"[AUTH] JWT secret: decoded from base64 ({len(raw)} bytes)")
-        return raw
-    except Exception:
-        print(f"[AUTH] JWT secret: using as raw string")
-        return secret.encode("utf-8")
+        signing_key = _jwks_client.get_signing_key_from_jwt(token)
+    except Exception as e:
+        print(f"[AUTH] JWKS key lookup failed: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token signing key lookup failed: {e}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-_JWT_SECRET = _get_jwt_secret()
-
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    # ── 2. Decode & verify the JWT ───────────────────────────────────────────
     try:
-        # Inspect token header to see what algorithm Supabase is using
-        unverified_header = jwt.get_unverified_header(token)
-        token_alg = unverified_header.get("alg", "unknown")
-        print(f"[AUTH] Token algorithm: {token_alg}")
+        alg = jwt.get_unverified_header(token).get("alg", "ES256")
+        print(f"[AUTH] Token algorithm: {alg}")
 
-        if token_alg in ["RS256", "ES256"]:
-            # Fetch JWKS using the issuer URL from the token
-            unverified_payload = jwt.decode(token, options={"verify_signature": False})
-            iss = unverified_payload.get("iss")
-            if not iss:
-                raise Exception("Missing 'iss' in token payload for JWKS verification")
-            
-            jwks_url = f"{iss}/.well-known/jwks.json"
-            jwks_client = jwt.PyJWKClient(jwks_url)
-            signing_key = jwks_client.get_signing_key_from_jwt(token)
-            
-            payload = jwt.decode(
-                token,
-                signing_key.key,
-                algorithms=[token_alg],
-                options={"verify_aud": True},
-                audience="authenticated"
-            )
-        else:
-            # Fallback to symmetric key for HS256 (legacy Supabase or local dev)
-            payload = jwt.decode(
-                token,
-                _JWT_SECRET,
-                algorithms=[token_alg],
-                options={"verify_aud": True},
-                audience="authenticated"
-            )
-
-        sub: str = payload.get("sub")
-        email: str = payload.get("email")
-        if sub is None or email is None:
-            print(f"[AUTH] JWT decoded but missing 'sub' or 'email'. payload keys: {list(payload.keys())}")
-            raise credentials_exception
-        print(f"[AUTH] JWT verified OK for user: {email}")
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["ES256", "RS256"],   # accept either asymmetric alg
+            audience="authenticated",
+        )
     except jwt.ExpiredSignatureError:
         print("[AUTH] JWT expired")
         raise HTTPException(
@@ -87,21 +72,38 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except Exception as e:
+    except jwt.PyJWTError as e:
         print(f"[AUTH] JWT invalid: {type(e).__name__}: {e}")
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {e}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    # Auto-create or sync a local user record using the authenticated Supabase user ID and email
+    # ── 3. Extract required claims ───────────────────────────────────────────
+    sub: str | None = payload.get("sub")
+    email: str | None = payload.get("email")
+    if not sub or not email:
+        print(
+            f"[AUTH] JWT missing 'sub' or 'email'. "
+            f"Present keys: {list(payload.keys())}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token payload is missing required claims (sub, email)",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    print(f"[AUTH] JWT verified OK for user: {email}")
+
+    # ── 4. Auto-create / sync local user record ──────────────────────────────
     user = db.query(User).filter(User.id == sub).first()
     if user is None:
         user_metadata = payload.get("user_metadata", {}) or {}
         full_name = user_metadata.get("full_name") or user_metadata.get("name")
-        user = User(
-            id=sub,
-            email=email,
-            full_name=full_name
-        )
+        user = User(id=sub, email=email, full_name=full_name)
         db.add(user)
         db.commit()
         db.refresh(user)
+
     return user
