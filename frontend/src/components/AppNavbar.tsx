@@ -7,6 +7,7 @@ const links = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/meetings", label: "Meetings" },
   { to: "/ask", label: "Ask Trace" },
+  { to: "/docs", label: "Docs" },
 ] as const;
 
 export function AppNavbar({ onUpload }: { onUpload?: () => void }) {

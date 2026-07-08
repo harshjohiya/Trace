@@ -15,6 +15,7 @@ import { Route as AskRouteImport } from './routes/ask'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MeetingsIdRouteImport } from './routes/meetings.$id'
+import { Route as DocsRouteImport } from './routes/docs'
 
 const MeetingsRoute = MeetingsRouteImport.update({
   id: '/meetings',
@@ -46,12 +47,18 @@ const MeetingsIdRoute = MeetingsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => MeetingsRoute,
 } as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ask': typeof AskRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/docs': typeof DocsRoute
   '/meetings': typeof MeetingsRouteWithChildren
   '/meetings/$id': typeof MeetingsIdRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/ask': typeof AskRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/docs': typeof DocsRoute
   '/meetings': typeof MeetingsRouteWithChildren
   '/meetings/$id': typeof MeetingsIdRoute
 }
@@ -69,15 +77,16 @@ export interface FileRoutesById {
   '/ask': typeof AskRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/docs': typeof DocsRoute
   '/meetings': typeof MeetingsRouteWithChildren
   '/meetings/$id': typeof MeetingsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ask' | '/auth' | '/dashboard' | '/meetings' | '/meetings/$id'
+  fullPaths: '/' | '/ask' | '/auth' | '/dashboard' | '/docs' | '/meetings' | '/meetings/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ask' | '/auth' | '/dashboard' | '/meetings' | '/meetings/$id'
-  id: '__root__' | '/' | '/ask' | '/auth' | '/dashboard' | '/meetings' | '/meetings/$id'
+  to: '/' | '/ask' | '/auth' | '/dashboard' | '/docs' | '/meetings' | '/meetings/$id'
+  id: '__root__' | '/' | '/ask' | '/auth' | '/dashboard' | '/docs' | '/meetings' | '/meetings/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -85,6 +94,7 @@ export interface RootRouteChildren {
   AskRoute: typeof AskRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
+  DocsRoute: typeof DocsRoute
   MeetingsRoute: typeof MeetingsRouteWithChildren
 }
 
@@ -109,6 +119,13 @@ declare module '@tanstack/react-router' {
       path: '/ask'
       fullPath: '/ask'
       preLoaderRoute: typeof AskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -152,6 +169,7 @@ const rootRouteChildren: RootRouteChildren = {
   AskRoute: AskRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
+  DocsRoute: DocsRoute,
   MeetingsRoute: MeetingsRouteWithChildren,
 }
 export const routeTree = rootRouteImport

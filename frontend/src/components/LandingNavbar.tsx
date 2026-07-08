@@ -31,7 +31,6 @@ export function LandingNavbar() {
         {[
           { href: "#features", label: "Features" },
           { href: "#how-it-works", label: "How it works" },
-          { href: "#pricing", label: "Pricing" },
         ].map((l) => (
           <a
             key={l.href}
@@ -44,6 +43,15 @@ export function LandingNavbar() {
             {l.label}
           </a>
         ))}
+        <Link
+          to="/docs"
+          className="text-[14px] font-medium transition-colors"
+          style={{ color: "var(--ink-2)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink-1)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-2)")}
+        >
+          Docs
+        </Link>
       </nav>
       
       <div className="flex items-center gap-6 ml-auto">
