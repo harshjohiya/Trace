@@ -273,7 +273,7 @@ def upload_meeting(
     }
 
 
-def _run_pipeline(job_id: str, meeting_id: str, audio_path: str, diarization_enabled: bool, user_id: int):
+def _run_pipeline(job_id: str, meeting_id: str, audio_path: str, diarization_enabled: bool, user_id: str):
     """Full processing pipeline as background task."""
 
     # Re-inject venv path inside background thread

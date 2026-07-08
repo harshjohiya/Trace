@@ -242,11 +242,4 @@ export const queryMeetings = (question: string, filter_type?: string) =>
       };
     });
 
-// ── Auth APIs ─────────────────────────────────────────────
-
-export const login = (email: string, password: string) =>
-  api.post("/auth/login", { email, password }).then((r) => r.data);
-
-export const signup = (email: string, password: string, full_name: string) =>
-  api.post("/auth/signup", { email, password, full_name }).then((r) => r.data);
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -21,6 +21,7 @@ import {
 import { WaveformIcon } from "@/components/WaveformIcon";
 import { LandingNavbar } from "@/components/LandingNavbar";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useAuth } from "@/components/AuthProvider";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,6 +50,15 @@ const fade = (delay = 0) => ({
 
 function LandingPage() {
   usePageTitle("Trace — Meeting Intelligence");
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate({ to: "/dashboard" });
+    }
+  }, [user, isLoading, navigate]);
+
   return (
     <div className="min-h-screen bg-white" style={{ color: "var(--ink-1)" }}>
       <LandingNavbar />

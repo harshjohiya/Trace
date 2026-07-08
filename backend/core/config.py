@@ -2,12 +2,12 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 
-load_dotenv()
-
-# Project root is the parent of the backend/ directory
-# This ensures all data paths are absolute regardless of where uvicorn is launched from
+# Project root is 2 levels above this file (core/config.py → core/ → backend/ → project root)
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 _DATA_DIR = _PROJECT_ROOT / "data"
+
+# Explicitly load the root .env so env vars are found regardless of where uvicorn is launched
+load_dotenv(dotenv_path=_PROJECT_ROOT / ".env")
 
 class Config:
     # LLM
@@ -34,6 +34,13 @@ class Config:
 
     # Security
     SECRET_KEY = os.getenv("SECRET_KEY", "trace_super_secret_jwt_key_for_development")
+    SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
 
 config = Config()
+
+# Startup check — warn loudly if JWT secret is missing
+if not config.SUPABASE_JWT_SECRET:
+    print("[CONFIG] WARNING: SUPABASE_JWT_SECRET is not set! All JWT verification will fail.")
+else:
+    print(f"[CONFIG] SUPABASE_JWT_SECRET loaded (first 8 chars: {config.SUPABASE_JWT_SECRET[:8]}...)")
 

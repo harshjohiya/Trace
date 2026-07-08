@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WaveformIcon } from "@/components/WaveformIcon";
-import { login as apiLogin, signup as apiSignup } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "sonner";
 
@@ -15,25 +14,38 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, signup, loginWithGoogle, user, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate({ to: "/dashboard" });
+    }
+  }, [user, isLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (isLogin) {
-        const res = await apiLogin(email, password);
-        login(res.access_token, res.user);
+        await login(email, password);
       } else {
-        const res = await apiSignup(email, password, fullName);
-        login(res.access_token, res.user);
+        await signup(email, password, fullName);
+        toast.success("Account created successfully!");
       }
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Authentication failed");
+      toast.error(err.message || "Authentication failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      toast.error(err.message || "Google Sign-In failed");
     }
   };
 
@@ -66,7 +78,7 @@ function AuthPage() {
             <div className="flex -space-x-3">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="w-10 h-10 rounded-full border-2 border-[#0a0a0a] overflow-hidden bg-gray-800">
-                  <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Avatar" className="w-full h-full object-cover" />
+                   <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -166,6 +178,27 @@ function AuthPage() {
               ) : (
                 isLogin ? "Sign In" : "Create account"
               )}
+            </button>
+
+            <div className="relative my-4 flex items-center">
+              <div className="flex-grow border-t" style={{ borderColor: "var(--border)" }}></div>
+              <span className="mx-4 text-xs font-normal" style={{ color: "var(--ink-2)" }}>or</span>
+              <div className="flex-grow border-t" style={{ borderColor: "var(--border)" }}></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              className="w-full h-11 rounded-lg text-[14px] font-semibold flex justify-center items-center gap-2 border transition-all hover:bg-gray-50 outline-none"
+              style={{ borderColor: "var(--border)", color: "var(--ink-1)" }}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12 5.04c1.62 0 3.06.56 4.2 1.66l3.12-3.12C17.43 1.83 14.91 1 12 1 7.24 1 3.23 3.73 1.3 7.73l3.69 2.87C5.9 7.42 8.7 5.04 12 5.04z" />
+                <path fill="#4285F4" d="M23.45 12.27c0-.82-.07-1.61-.21-2.38H12v4.51h6.43c-.28 1.48-1.11 2.73-2.35 3.58l3.66 2.84c2.14-1.98 3.39-4.88 3.39-8.55z" />
+                <path fill="#FBBC05" d="M5.02 14.86c-.24-.72-.38-1.49-.38-2.3c0-.81.14-1.58.38-2.3L1.33 7.39c-.83 1.67-1.3 3.56-1.3 5.56s.47 3.89 1.3 5.56l3.69-2.65z" />
+                <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.66-2.84c-1.01.68-2.31 1.09-4.3 1.09-3.3 0-6.1-2.38-7.01-5.56L1.3 15.63C3.23 19.63 7.24 23 12 23z" />
+              </svg>
+              Sign in with Google
             </button>
           </form>
 
