@@ -309,7 +309,7 @@ class VectorStore:
         query: str,
         n_results: int = 8,
         filter_type: str = None,
-        user_id: int = None
+        user_id: str = None
     ) -> list[dict]:
         """
         Semantic search over extracted facts.
@@ -368,7 +368,7 @@ class VectorStore:
         self,
         query: str,
         n_results: int = 3,
-        user_id: int = None
+        user_id: str = None
     ) -> list[dict]:
         """
         Semantic search over raw transcript chunks.

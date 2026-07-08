@@ -55,7 +55,7 @@ class MeetingQueryEngine:
 
         return chunks
 
-    def _build_context(self, query: str, user_id: int = None) -> tuple[str, list]:
+    def _build_context(self, query: str, user_id: str = None) -> tuple[str, list]:
         """
         Retrieve relevant facts + transcript chunks for the query.
         """
@@ -120,7 +120,7 @@ class MeetingQueryEngine:
                 ) from e
             raise RuntimeError(f"RAG LLM call failed via Groq: {error_text}") from e
 
-    def ask(self, question: str, user_id: int = None) -> dict:
+    def ask(self, question: str, user_id: str = None) -> dict:
         """
         Main query method. Ask anything about your meetings.
 
@@ -191,7 +191,7 @@ Answer based strictly on the context above:"""
         self,
         question: str,
         filter_type: str = None,
-        user_id: int = None
+        user_id: str = None
     ) -> dict:
         """
         Query with type filter for precise structured lookups.
